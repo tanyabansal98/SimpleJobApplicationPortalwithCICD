@@ -1,0 +1,23 @@
+# Ignore the local target folder (we want Docker to build its own fresh version)
+target/
+
+# Ignore local log files
+*.log
+
+# Ignore local build tools and scripts
+.mvn/
+mvnw
+mvnw.cmd
+
+# Ignore IDE settings (IntelliJ, VSCode, etc.)
+.idea/
+.vscode/
+
+# Ignore Git version history (the container doesn't need to know its ancestry!)
+.git/
+.gitignore
+
+# Ignore miscellaneous files
+HELP.md
+Dockerfile
+.dockerignore
