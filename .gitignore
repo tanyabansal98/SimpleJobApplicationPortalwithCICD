@@ -1,0 +1,39 @@
+# ===============================
+# Maven build outputs
+# ===============================
+target/
+*.jar
+*.war
+*.class
+
+# ===============================
+# IDE files
+# ===============================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+
+# ===============================
+# macOS junk
+# ===============================
+.DS_Store
+
+# ===============================
+# Uploaded user files (resumes, etc.)
+# ===============================
+uploads/
+
+# ===============================
+# Spring Boot local-only secrets
+# (never commit real passwords)
+# ===============================
+application-local.properties
+
+# ===============================
+# Environment files
+# ===============================
+.env
+*.env
