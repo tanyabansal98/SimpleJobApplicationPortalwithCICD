@@ -62,33 +62,22 @@ stages:
     dependsOn: Build
     condition: succeeded()
     jobs:
-      - deployment: DeployToAzure
+      - job: DeployToAzure
         displayName: 'Update Container App with new image'
-        environment: 'staging'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: AzureCLI@2
-                  displayName: 'Azure CLI — Deploy new revision'
-                  inputs:
-                    azureSubscription: 'AzureServiceConnection'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      # Install/upgrade the Container Apps CLI extension
-                      az extension add --name containerapp --upgrade --yes
-
-                      echo "Deploying image: $(acrLoginServer)/$(imageName):$(Build.BuildId)"
-
-                      # Update the container app with the new image tag
-                      az containerapp update \
-                        --name $(containerAppName) \
-                        --resource-group $(resourceGroup) \
-                        --image $(acrLoginServer)/$(imageName):$(Build.BuildId) \
-                        --revision-suffix build-$(Build.BuildId)
-
-                      echo "Deployment complete. New revision: $(containerAppName)--build-$(Build.BuildId)"
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Azure CLI — Deploy new revision'
+            inputs:
+              azureSubscription: 'AzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az extension add --name containerapp --upgrade --yes
+                az containerapp update \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --image $(acrLoginServer)/$(imageName):$(Build.BuildId) \
+                  --revision-suffix build-$(Build.BuildId)
 
   # ─────────────────────────────────────────────────
   # Stage 3: Send 100% traffic to the new revision
@@ -98,26 +87,19 @@ stages:
     dependsOn: DeployStaging
     condition: succeeded()
     jobs:
-      - deployment: ActivateRevision
+      - job: ActivateRevision
         displayName: 'Route all traffic to new revision'
-        environment: 'production'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: AzureCLI@2
-                  displayName: 'Azure CLI — Set 100% traffic to new revision'
-                  inputs:
-                    azureSubscription: 'AzureServiceConnection'
-                    scriptType: 'bash'
-                    scriptLocation: 'inlineScript'
-                    inlineScript: |
-                      az extension add --name containerapp --upgrade --yes
-
-                      az containerapp ingress traffic set \
-                        --name $(containerAppName) \
-                        --resource-group $(resourceGroup) \
-                        --revision-weight \
-                          $(containerAppName)--build-$(Build.BuildId)=100
-
-                      echo "Production traffic switched to build $(Build.BuildId)"
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Azure CLI — Set 100% traffic to new revision'
+            inputs:
+              azureSubscription: 'AzureServiceConnection'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az extension add --name containerapp --upgrade --yes
+                az containerapp ingress traffic set \
+                  --name $(containerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --revision-weight \
+                    $(containerAppName)--build-$(Build.BuildId)=100
