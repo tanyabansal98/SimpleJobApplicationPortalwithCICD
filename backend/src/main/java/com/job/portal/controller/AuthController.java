@@ -23,21 +23,35 @@ public class AuthController {
 
     // Simply shows the initial login screen
     @GetMapping({"/", "/login"})
-    public String showLoginPage() {
-        return "index";
+    public String showLoginPage(Model model) {
+        try {
+            return "index";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading login page: " + e.getMessage());
+            return "index";
+        }
     }
 
     // A quick check to see if the server is alive
     @GetMapping("/ping")
     @org.springframework.web.bind.annotation.ResponseBody
     public String ping() {
-        return "PONG - Server is running!";
+        try {
+            return "PONG - Server is running!";
+        } catch (Exception e) {
+            return "ERROR - Server is experiencing issues: " + e.getMessage();
+        }
     }
 
     // Displays the sign-up page for new students or employers
     @GetMapping("/register")
-    public String showRegisterPage() {
-        return "register";
+    public String showRegisterPage(Model model) {
+        try {
+            return "register";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading registration page: " + e.getMessage());
+            return "register";
+        }
     }
 
     // Handles the login form submission. If successful, we store the user in the session.
@@ -74,15 +88,25 @@ public class AuthController {
 
     // Clears the session and sends the user back to the homepage
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/";
+    public String logout(HttpSession session, Model model) {
+        try {
+            session.invalidate();
+            return "redirect:/";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error logging out: " + e.getMessage());
+            return "redirect:/";
+        }
     }
 
     // Show the reset password page
     @GetMapping("/forgot-password")
-    public String showForgotPasswordPage() {
-        return "forgot_password";
+    public String showForgotPasswordPage(Model model) {
+        try {
+            return "forgot_password";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading forgot password page: " + e.getMessage());
+            return "forgot_password";
+        }
     }
 
     // Processes the password reset request

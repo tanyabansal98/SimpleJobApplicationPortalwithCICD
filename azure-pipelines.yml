@@ -24,12 +24,11 @@ stages:
 
           # Step 1: Compile and package the Spring Boot WAR
           - task: Maven@4
-            displayName: 'Maven — Build WAR (skip tests)'
+            displayName: 'Maven — Build WAR'
             inputs:
               mavenPomFile: 'backend/pom.xml'
               goals: 'clean package'
-              options: '-DskipTests=true'
-              publishJUnitResults: false
+              publishJUnitResults: true
 
           # Step 2 & 3: Build and Push using manual script (fixes Mac ARM64 vs Azure AMD64)
           - script: |

@@ -35,14 +35,19 @@ public class StudentController {
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        // Only show applications the student is still actively pursuing.
-        java.util.List<com.job.portal.model.Application> activeApps = applicationService.getByStudent(user.getUserId())
-                .stream()
-                .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
-                .collect(java.util.stream.Collectors.toList());
-        model.addAttribute("applications", activeApps);
-        return "student/dashboard";
+        try {
+            User user = (User) session.getAttribute("user");
+            // Only show applications the student is still actively pursuing.
+            java.util.List<com.job.portal.model.Application> activeApps = applicationService.getByStudent(user.getUserId())
+                    .stream()
+                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .collect(java.util.stream.Collectors.toList());
+            model.addAttribute("applications", activeApps);
+            return "student/dashboard";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading dashboard: " + e.getMessage());
+            return "student/dashboard";
+        }
     }
 
     /**
@@ -55,43 +60,58 @@ public class StudentController {
             @RequestParam(required = false) String location,
             HttpSession session,
             Model model) {
-        User user = (User) session.getAttribute("user");
-        model.addAttribute("jobs", jobService.listJobs(title, location));
+        try {
+            User user = (User) session.getAttribute("user");
+            model.addAttribute("jobs", jobService.listJobs(title, location));
 
-        // Track jobs student has already applied to (exclude withdrawn).
-        java.util.Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
-                .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
-                .map(app -> app.getJob().getJobId())
-                .collect(java.util.stream.Collectors.toSet());
-        model.addAttribute("appliedJobIds", appliedJobIds);
+            // Track jobs student has already applied to (exclude withdrawn).
+            java.util.Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
+                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .map(app -> app.getJob().getJobId())
+                    .collect(java.util.stream.Collectors.toSet());
+            model.addAttribute("appliedJobIds", appliedJobIds);
 
-        return "student/jobs";
+            return "student/jobs";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error browsing jobs: " + e.getMessage());
+            return "student/dashboard";
+        }
     }
 
     // Opens the detail page for a single job listing.
 
     @GetMapping("/jobs/{id}")
     public String viewJob(@PathVariable Long id, HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        model.addAttribute("job", jobService.getJob(id));
+        try {
+            User user = (User) session.getAttribute("user");
+            model.addAttribute("job", jobService.getJob(id));
 
-        // Check if the student already has a live (non-withdrawn) application for this
-        // job.
-        boolean alreadyApplied = applicationService.getByStudent(user.getUserId()).stream()
-                .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
-                .anyMatch(app -> app.getJob().getJobId().equals(id));
-        model.addAttribute("alreadyApplied", alreadyApplied);
+            // Check if the student already has a live (non-withdrawn) application for this
+            // job.
+            boolean alreadyApplied = applicationService.getByStudent(user.getUserId()).stream()
+                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .anyMatch(app -> app.getJob().getJobId().equals(id));
+            model.addAttribute("alreadyApplied", alreadyApplied);
 
-        return "student/job_details";
+            return "student/job_details";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error viewing job details: " + e.getMessage());
+            return "student/dashboard";
+        }
     }
 
     // Loads the student's profile page
 
     @GetMapping("/profile")
     public String viewProfile(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        model.addAttribute("profile", profileService.getProfile(user.getUserId()));
-        return "student/profile";
+        try {
+            User user = (User) session.getAttribute("user");
+            model.addAttribute("profile", profileService.getProfile(user.getUserId()));
+            return "student/profile";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading profile: " + e.getMessage());
+            return "student/dashboard";
+        }
     }
 
     // Handles resume file uploads from the profile page.

@@ -13,23 +13,27 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session) {
-        User user = (User) session.getAttribute("user");
+        try {
+            User user = (User) session.getAttribute("user");
 
-        // No session? Send them back to login — nothing to show here.
-        if (user == null) {
-            return "redirect:/?error=Please login first.";
+            // No session? Send them back to login — nothing to show here.
+            if (user == null) {
+                return "redirect:/?error=Please login first.";
+            }
+
+            // Route each role to their dedicated dashboard.
+            if (user.getRole() == Role.ADMIN) {
+                return "redirect:/admin/dashboard";
+            } else if (user.getRole() == Role.EMPLOYER) {
+                return "redirect:/employer/dashboard";
+            } else if (user.getRole() == Role.STUDENT) {
+                return "redirect:/student/dashboard";
+            }
+
+            // Shouldn't happen in normal flow, but guard against corrupted role data.
+            return "redirect:/?error=Invalid role.";
+        } catch (Exception e) {
+            return "redirect:/?error=Dashboard error: " + e.getMessage();
         }
-
-        // Route each role to their dedicated dashboard.
-        if (user.getRole() == Role.ADMIN) {
-            return "redirect:/admin/dashboard";
-        } else if (user.getRole() == Role.EMPLOYER) {
-            return "redirect:/employer/dashboard";
-        } else if (user.getRole() == Role.STUDENT) {
-            return "redirect:/student/dashboard";
-        }
-
-        // Shouldn't happen in normal flow, but guard against corrupted role data.
-        return "redirect:/?error=Invalid role.";
     }
 }
