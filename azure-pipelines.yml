@@ -41,7 +41,7 @@ stages:
           - script: |
               export DOCKER_BUILDKIT=1
               echo "Logging into ACR..."
-              docker login $(acrLoginServer) -u $(acrName) -p $(az acr login --name $(acrName) --expose-token --output tsv --query accessToken)
+              az acr login --name $(acrName)
               
               echo "Building image for linux/amd64..."
               docker build --pull --platform linux/amd64 \
