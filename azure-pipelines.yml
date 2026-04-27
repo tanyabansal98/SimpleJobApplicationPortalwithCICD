@@ -1,11 +1,5 @@
 trigger:
-  branches:
-    include:
-      - main
-  paths:
-    include:
-      - '*'
-      - backend/**
+  - main
 
 pool:
   name: 'Default'
@@ -79,27 +73,3 @@ stages:
                   --image $(acrLoginServer)/$(imageName):$(Build.BuildId) \
                   --revision-suffix build-$(Build.BuildId)
 
-  # ─────────────────────────────────────────────────
-  # Stage 3: Send 100% traffic to the new revision
-  # ─────────────────────────────────────────────────
-  - stage: DeployProduction
-    displayName: 'Activate New Revision (100% Traffic)'
-    dependsOn: DeployStaging
-    condition: succeeded()
-    jobs:
-      - job: ActivateRevision
-        displayName: 'Route all traffic to new revision'
-        steps:
-          - task: AzureCLI@2
-            displayName: 'Azure CLI — Set 100% traffic to new revision'
-            inputs:
-              azureSubscription: 'AzureServiceConnection'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az extension add --name containerapp --upgrade --yes
-                az containerapp ingress traffic set \
-                  --name $(containerAppName) \
-                  --resource-group $(resourceGroup) \
-                  --revision-weight \
-                    $(containerAppName)--build-$(Build.BuildId)=100
