@@ -36,31 +36,22 @@ stages:
               options: '-DskipTests=true'
               publishJUnitResults: false
 
-          # Step 2: Build the Docker image
-          # --platform linux/amd64 ensures the image runs correctly on Azure Container Apps
-          - task: Docker@2
-            displayName: 'Docker — Build Image (linux/amd64)'
-            inputs:
-              containerRegistry: 'ACRServiceConnection'
-              repository: '$(imageName)'
-              command: 'build'
-              Dockerfile: 'backend/Dockerfile'
-              buildContext: 'backend'
-              arguments: '--platform linux/amd64'
-              tags: |
-                $(Build.BuildId)
-                latest
+          # Step 2 & 3: Build and Push using manual script (fixes Mac ARM64 vs Azure AMD64)
+          - script: |
+              export DOCKER_BUILDKIT=1
+              echo "Logging into ACR..."
+              docker login $(acrLoginServer) -u $(acrName) -p $(az acr login --name $(acrName) --expose-token --output tsv --query accessToken)
+              
+              echo "Building image for linux/amd64..."
+              docker build --platform linux/amd64 \
+                -t $(acrLoginServer)/$(imageName):$(Build.BuildId) \
+                -t $(acrLoginServer)/$(imageName):latest \
+                ./backend
 
-          # Step 3: Push the image to Azure Container Registry
-          - task: Docker@2
-            displayName: 'Docker — Push Image to ACR'
-            inputs:
-              containerRegistry: 'ACRServiceConnection'
-              repository: '$(imageName)'
-              command: 'push'
-              tags: |
-                $(Build.BuildId)
-                latest
+              echo "Pushing images..."
+              docker push $(acrLoginServer)/$(imageName):$(Build.BuildId)
+              docker push $(acrLoginServer)/$(imageName):latest
+            displayName: 'Docker — Build & Push (fixes Mac architecture issues)'
 
   # ─────────────────────────────────────────────────
   # Stage 2: Deploy new revision to Azure Container Apps
