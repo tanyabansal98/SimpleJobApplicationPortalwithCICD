@@ -4,6 +4,7 @@ trigger:
       - main
   paths:
     include:
+      - '*'
       - backend/**
 
 pool:
@@ -43,7 +44,7 @@ stages:
               docker login $(acrLoginServer) -u $(acrName) -p $(az acr login --name $(acrName) --expose-token --output tsv --query accessToken)
               
               echo "Building image for linux/amd64..."
-              docker build --platform linux/amd64 \
+              docker build --pull --platform linux/amd64 \
                 -t $(acrLoginServer)/$(imageName):$(Build.BuildId) \
                 -t $(acrLoginServer)/$(imageName):latest \
                 ./backend
