@@ -28,10 +28,11 @@ public class SessionInterceptor implements HandlerInterceptor {
         // }
 
         String path = request.getServletPath();
+        if (path == null) path = "";
 
         // 1. Allow public routes
-        if (path.equals("/") || path.equals("/login") || path.equals("/register") || path.equals("/forgot-password")
-                || path.startsWith("/css/") || path.startsWith("/js/")) {
+        if (path.isEmpty() || path.equals("/") || path.equals("/login") || path.equals("/register") || path.equals("/forgot-password")
+                || path.startsWith("/css/") || path.startsWith("/js/") || path.endsWith(".jsp") || request.getQueryString() != null && request.getQueryString().contains("error")) {
             return true;
         }
 
@@ -40,7 +41,11 @@ public class SessionInterceptor implements HandlerInterceptor {
         User user = (session != null) ? (User) session.getAttribute("user") : null;
 
         if (user == null) {
-            response.sendRedirect("/?error=Please login first.");
+            // Prevent infinite loop: if we are already on the root with an error, don't redirect again
+            if (path.isEmpty() || path.equals("/")) {
+                return true; 
+            }
+            response.sendRedirect(request.getContextPath() + "/?error=Please login first.");
             return false;
         }
 

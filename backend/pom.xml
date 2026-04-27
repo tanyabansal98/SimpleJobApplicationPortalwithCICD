@@ -11,6 +11,7 @@
 	<groupId>com.job.portal</groupId>
 	<artifactId>job-application-portal</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
 	<name>job-application-portal</name>
 	<description>Job Application Portal project for Spring Boot</description>
 	<url/>
