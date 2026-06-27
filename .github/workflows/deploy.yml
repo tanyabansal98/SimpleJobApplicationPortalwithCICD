@@ -37,13 +37,13 @@ jobs:
       - name: Build and push backend image
         working-directory: ./backend
         run: |
-          docker build -t public.ecr.aws/n2z6y4a9/job-portal-backend:latest .
+          docker build --platform linux/amd64 -t public.ecr.aws/n2z6y4a9/job-portal-backend:latest .
           docker push public.ecr.aws/n2z6y4a9/job-portal-backend:latest
 
       - name: Build and push auth-service image
         working-directory: ./auth-service
         run: |
-          docker build -t public.ecr.aws/n2z6y4a9/job-portal-auth-service:latest .
+          docker build --platform linux/amd64 -t public.ecr.aws/n2z6y4a9/job-portal-auth-service:latest .
           docker push public.ecr.aws/n2z6y4a9/job-portal-auth-service:latest
 
   deploy:
