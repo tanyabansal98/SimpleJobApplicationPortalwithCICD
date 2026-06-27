@@ -4,21 +4,16 @@ server:
 
 spring:
   datasource:
-    # URL to connect to the database. 
-    # When running on host, connects to localhost:1521. When inside Docker, we override via env variables.
-    url: ${SPRING_DATASOURCE_URL:jdbc:oracle:thin:@localhost:1521/XEPDB1}
-    # Database login username
-    username: ${SPRING_DATASOURCE_USERNAME:SYSTEM}
-    # Database login password
-    password: ${SPRING_DATASOURCE_PASSWORD:OraclePassword123}
-    # The Oracle JDBC driver class
-    driver-class-name: oracle.jdbc.OracleDriver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-db:5432/jobportal}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:PostgresPassword123}
+    driver-class-name: org.postgresql.Driver
   
   jpa:
     properties:
       hibernate:
-        # Specifies Oracle SQL dialect so Hibernate generates proper Oracle-compatible SQL queries
-        dialect: org.hibernate.dialect.OracleDialect
+        # Specifies PostgreSQL dialect so Hibernate generates proper PostgreSQL-compatible SQL queries
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       # DDL Auto: MUST be set to "none" because we do NOT modify or drop the existing USERS schema.
       ddl-auto: none

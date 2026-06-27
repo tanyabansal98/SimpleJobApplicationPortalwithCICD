@@ -25,8 +25,6 @@
         <java.version>17</java.version>
         <!-- JJWT Version requested by user -->
         <jjwt.version>0.12.3</jjwt.version>
-        <!-- Oracle JDBC driver Version requested by user -->
-        <oracle.ojdbc.version>23.3.0.23.09</oracle.ojdbc.version>
         <!-- Lombok version overriding to support newer Java versions -->
         <lombok.version>1.18.36</lombok.version>
     </properties>
@@ -60,11 +58,11 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Oracle JDBC Driver: The highway/pipeline connecting our Java app to the Oracle Database. -->
+        <!-- PostgreSQL JDBC Driver -->
         <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <version>${oracle.ojdbc.version}</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- JJWT (Java JWT) API: The blueprint/contracts for creating and reading 
