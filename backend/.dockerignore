@@ -1,5 +1,4 @@
-# Ignore the local target folder (we want Docker to build its own fresh version)
-target/
+
 
 # Ignore local log files
 *.log
