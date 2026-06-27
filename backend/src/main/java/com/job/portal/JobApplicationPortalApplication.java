@@ -28,6 +28,7 @@ public class JobApplicationPortalApplication {
 				}
 			} catch (Exception e) {
 				// Silent fail if seeding has issues
+				// Adding a comment here for testing
 			}
 		};
 	}

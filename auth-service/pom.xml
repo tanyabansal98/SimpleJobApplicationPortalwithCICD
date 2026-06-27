@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Parent Pom Configuration: Like inheriting traits from a parent, 
+         this sets up standard Spring Boot defaults, plugins, and dependencies -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <!-- Project Coordinates: The unique passport identifier of our service -->
+    <groupId>com.job.portal</groupId>
+    <artifactId>auth-service</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>auth-service</name>
+    <description>Authentication Microservice for the Job Portal</description>
+
+    <properties>
+        <!-- Specify Java 17 for our codebase -->
+        <java.version>17</java.version>
+        <!-- JJWT Version requested by user -->
+        <jjwt.version>0.12.3</jjwt.version>
+        <!-- Oracle JDBC driver Version requested by user -->
+        <oracle.ojdbc.version>23.3.0.23.09</oracle.ojdbc.version>
+        <!-- Lombok version overriding to support newer Java versions -->
+        <lombok.version>1.18.36</lombok.version>
+    </properties>
+
+    <dependencies>
+        <!-- Web Dependency: Think of this as the post office of our app. 
+             It allows us to build RESTful APIs and handle incoming HTTP requests on port 9090. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Security Dependency: The security guards for our microservice. 
+             Provides password hashing (BCrypt) and general URL endpoint authorization. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- OAuth2 Client Dependency: Allows users to log in using third-party accounts 
+             like Google and GitHub. This handles the redirection and user fetching handshake. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
+        <!-- Data JPA Dependency: The translator/liaison between Java objects and Database tables. 
+             Saves us from writing manual SQL statements for basic operations. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Oracle JDBC Driver: The highway/pipeline connecting our Java app to the Oracle Database. -->
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>${oracle.ojdbc.version}</version>
+        </dependency>
+
+        <!-- JJWT (Java JWT) API: The blueprint/contracts for creating and reading 
+             digital credentials (tokens) that users present to prove they are logged in. -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+
+        <!-- JJWT Implementation: The actual workers that fulfill the JJWT API contract. -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- JJWT Jackson Integration: A helper that formats JWTs using JSON processors (Jackson)
+             so we can easily serialize and deserialize token payloads. -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Lombok: Reduces boilerplate code by automatically generating getters, 
+             setters, constructors, and toString methods at compile time. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Testing suite: A toolkit to write and run unit/integration tests to ensure 
+             everything works correctly before deploying. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Compiler Plugin: Instructs Maven on how compile Java source code 
+                 using JDK 17. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <!-- Spring Boot Maven Plugin: Allows us to build a single executable, 
+                 runnable JAR file of our microservice via 'mvn spring-boot:run'. -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
