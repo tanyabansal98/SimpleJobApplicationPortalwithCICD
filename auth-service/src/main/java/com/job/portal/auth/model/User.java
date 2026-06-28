@@ -31,8 +31,7 @@ public class User {
      * @Column(name = "USER_ID"): Maps this property to the USER_ID column in the database.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_seq_gen")
-    @SequenceGenerator(name = "users_seq_gen", sequenceName = "USERS_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "USER_ID")
     private Long userId;
 

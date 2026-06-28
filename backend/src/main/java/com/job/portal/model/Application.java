@@ -10,8 +10,7 @@ import java.time.LocalDateTime;
 public class Application implements java.io.Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "apps_seq_gen")
-    @SequenceGenerator(name = "apps_seq_gen", sequenceName = "APPLICATIONS_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "APPLICATION_ID")
     private Long applicationId;
 

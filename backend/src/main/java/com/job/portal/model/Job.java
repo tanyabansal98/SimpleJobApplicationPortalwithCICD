@@ -9,8 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Job implements java.io.Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "jobs_seq_gen")
-    @SequenceGenerator(name = "jobs_seq_gen", sequenceName = "JOBS_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "JOB_ID")
     private Long jobId;
 
