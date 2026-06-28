@@ -31,7 +31,7 @@ public class User {
      * @Column(name = "USER_ID"): Maps this property to the USER_ID column in the database.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "USER_ID")
     private Long userId;
 
