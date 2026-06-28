@@ -59,9 +59,9 @@ public class HibernateConfig {
     // This handles our @Transactional tags, making sure database changes are 
     // saved correctly or rolled back if something goes wrong.
     @Bean
-    public PlatformTransactionManager hibernateTransactionManager() {
+    public PlatformTransactionManager hibernateTransactionManager(SessionFactory sessionFactory) {
         HibernateTransactionManager transactionManager = new HibernateTransactionManager();
-        transactionManager.setSessionFactory(sessionFactory().getObject());
+        transactionManager.setSessionFactory(sessionFactory);
         return transactionManager;
     }
 

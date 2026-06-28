@@ -1,17 +1,20 @@
+version: '3.8'
 services:
-  oracle-db:
-    image: gvenzl/oracle-xe:21-slim-faststart
-    container_name: oracle-db
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: postgres-db
     ports:
-      - "1521:1521"
+      - "5432:5432"
     environment:
-      - ORACLE_PASSWORD=OraclePassword123
+      - POSTGRES_DB=jobportal
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=PostgresPassword123
+    mem_limit: 200m
     healthcheck:
-      test: ["CMD-SHELL", "sqlplus -L system/OraclePassword123@localhost:1521/XEPDB1 <<<'exit;'"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-
   redis:
     image: redis:latest
     container_name: redis
@@ -22,8 +25,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  app:
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/jobportal
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=PostgresPassword123
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -31,12 +47,15 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@oracle-db:1521/XEPDB1
-      - SPRING_DATASOURCE_USERNAME=SYSTEM
-      - SPRING_DATASOURCE_PASSWORD=OraclePassword123
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/jobportal
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=PostgresPassword123
       - SPRING_DATA_REDIS_HOST=redis
+      - AUTH_SERVICE_URL=http://auth-service:9090
     depends_on:
-      oracle-db:
+      postgres-db:
         condition: service_healthy
       redis:
         condition: service_healthy
+      auth-service:
+        condition: service_started
