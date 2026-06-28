@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.0</version>
+        <version>3.4.1</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -26,7 +26,7 @@
         <!-- JJWT Version requested by user -->
         <jjwt.version>0.12.3</jjwt.version>
         <!-- Lombok version overriding to support newer Java versions -->
-        <lombok.version>1.18.36</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
     </properties>
 
     <dependencies>
