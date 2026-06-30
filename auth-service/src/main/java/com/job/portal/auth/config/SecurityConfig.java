@@ -12,7 +12,6 @@ import org.springframework.security.web.SecurityFilterChain;
  * Analogy: The security guard protocols manual. It specifies which doors are locked, 
  * which doors are open to the public, and how passwords should be encrypted.
  *
- * @Configuration: Tells Spring that this is a setup/configuration class.
  * @EnableWebSecurity: Activates Spring Security web protection filters.
  */
 @Configuration
@@ -21,7 +20,6 @@ public class SecurityConfig {
 
     /**
      * Exposes the BCryptPasswordEncoder as a Spring Bean.
-     * Analogy: The official password shredder. 
      * BCrypt is a one-way hashing function. We use it to turn a user's plain-text password 
      * into an unreadable, secure string.
      */

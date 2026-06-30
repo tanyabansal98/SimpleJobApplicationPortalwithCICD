@@ -15,9 +15,6 @@ import java.util.Date;
  * The JwtUtil class acts like a laminating machine and a security scanner for our JWT tokens.
  * It is responsible for creating (laminating) new tokens when a user logs in, and 
  * verifying (scanning) tokens when they are sent back to us.
- *
- * @Component: Tells Spring to automatically create and manage one single instance (Bean) 
- * of this class, which we can inject into other classes whenever we need JWT support.
  */
 @Component
 public class JwtUtil {
@@ -51,7 +48,6 @@ public class JwtUtil {
 
     /**
      * Generates a new JWT token for a user.
-     * Analogy: Creating a new wristband for a concert-goer at the ticket gate.
      *
      * @param email The user's email address (will be the Subject / Identifier)
      * @param role The user's access level (e.g. STUDENT, EMPLOYER)
@@ -81,8 +77,6 @@ public class JwtUtil {
 
     /**
      * Validates if a token is authentic, untampered, and not expired.
-     * Analogy: The security guard at the gate checking if the wristband is real and still valid.
-     *
      * @param token The JWT token string sent by the client
      * @return true if valid, false if invalid or expired
      */
@@ -101,8 +95,6 @@ public class JwtUtil {
 
     /**
      * Extracts all information (claims) stored inside the token.
-     * Analogy: Reading the text printed on the wristband.
-     *
      * @param token The JWT token string
      * @return The Claims object representing the token's payload
      * @throws JwtException if the token cannot be parsed, has an invalid signature, or is expired

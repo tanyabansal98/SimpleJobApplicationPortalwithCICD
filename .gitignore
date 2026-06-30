@@ -37,3 +37,4 @@ application-local.properties
 # ===============================
 .env
 *.env
+.DS_Store
