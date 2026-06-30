@@ -2,73 +2,124 @@ trigger:
   - main
 
 pool:
-  name: 'Default'
+  vmImage: 'ubuntu-latest'
 
 variables:
-  acrName: 'tanyajobportalacr'
-  acrLoginServer: 'tanyajobportalacr.azurecr.io'
-  imageName: 'job-portal-backend'
-  containerAppName: 'placeholder-app'
-  resourceGroup: 'rg-job-portal'
+  acrName: 'jobportal'
+  acrLoginServer: 'jobportal.azurecr.io'
+  backendImageName: 'job-portal-backend'
+  authImageName: 'job-portal-auth'
+  backendContainerAppName: 'backend'
+  authContainerAppName: 'auth-service'
+  resourceGroup: 'job-portal-rg'
+  azureServiceConnection: 'AzureServiceConnection'
 
 stages:
   # ─────────────────────────────────────────────────
-  # Stage 1: Build the WAR and push the Docker image
+  # Stage 1: Build the backend (WAR) and auth-service (JAR), push both images
   # ─────────────────────────────────────────────────
   - stage: Build
-    displayName: 'Build & Push Docker Image'
+    displayName: 'Build & Push Docker Images'
     jobs:
-      - job: BuildJob
-        displayName: 'Maven Build + Docker Build + Push to ACR'
+      - job: BuildBackend
+        displayName: 'Build & Push — backend'
         steps:
-
-          # Step 1: Compile and package the Spring Boot WAR
           - task: Maven@4
-            displayName: 'Maven — Build WAR'
+            displayName: 'Maven — Build backend WAR'
             inputs:
               mavenPomFile: 'backend/pom.xml'
               goals: 'clean package'
               publishJUnitResults: true
 
-          # Step 2 & 3: Build and Push using manual script (fixes Mac ARM64 vs Azure AMD64)
-          - script: |
-              export DOCKER_BUILDKIT=1
-              echo "Logging into ACR..."
-              az acr login --name $(acrName)
-              
-              echo "Building image for linux/amd64..."
-              docker build --pull --platform linux/amd64 \
-                -t $(acrLoginServer)/$(imageName):$(Build.BuildId) \
-                -t $(acrLoginServer)/$(imageName):latest \
-                ./backend
+          - task: AzureCLI@2
+            displayName: 'Docker — Build & Push backend image'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                set -e
+                export DOCKER_BUILDKIT=1
+                az acr login --name $(acrName)
 
-              echo "Pushing images..."
-              docker push $(acrLoginServer)/$(imageName):$(Build.BuildId)
-              docker push $(acrLoginServer)/$(imageName):latest
-            displayName: 'Docker — Build & Push (fixes Mac architecture issues)'
+                docker build --pull --platform linux/amd64 \
+                  -t $(acrLoginServer)/$(backendImageName):$(Build.BuildId) \
+                  -t $(acrLoginServer)/$(backendImageName):latest \
+                  ./backend
+
+                docker push $(acrLoginServer)/$(backendImageName):$(Build.BuildId)
+                docker push $(acrLoginServer)/$(backendImageName):latest
+
+      - job: BuildAuthService
+        displayName: 'Build & Push — auth-service'
+        steps:
+          - task: Maven@4
+            displayName: 'Maven — Build auth-service JAR'
+            inputs:
+              mavenPomFile: 'auth-service/pom.xml'
+              goals: 'clean package'
+              publishJUnitResults: true
+
+          - task: AzureCLI@2
+            displayName: 'Docker — Build & Push auth-service image'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                set -e
+                export DOCKER_BUILDKIT=1
+                az acr login --name $(acrName)
+
+                docker build --pull --platform linux/amd64 \
+                  -t $(acrLoginServer)/$(authImageName):$(Build.BuildId) \
+                  -t $(acrLoginServer)/$(authImageName):latest \
+                  ./auth-service
+
+                docker push $(acrLoginServer)/$(authImageName):$(Build.BuildId)
+                docker push $(acrLoginServer)/$(authImageName):latest
 
   # ─────────────────────────────────────────────────
-  # Stage 2: Deploy new revision to Azure Container Apps
+  # Stage 2: Deploy new revisions to Azure Container Apps
   # ─────────────────────────────────────────────────
-  - stage: DeployStaging
+  - stage: Deploy
     displayName: 'Deploy to Azure Container Apps'
     dependsOn: Build
     condition: succeeded()
     jobs:
-      - job: DeployToAzure
-        displayName: 'Update Container App with new image'
+      - job: DeployBackend
+        displayName: 'Deploy — backend'
         steps:
           - task: AzureCLI@2
-            displayName: 'Azure CLI — Deploy new revision'
+            displayName: 'Azure CLI — Update backend container app'
             inputs:
-              azureSubscription: 'AzureServiceConnection'
+              azureSubscription: '$(azureServiceConnection)'
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
+                set -e
                 az extension add --name containerapp --upgrade --yes
                 az containerapp update \
-                  --name $(containerAppName) \
+                  --name $(backendContainerAppName) \
                   --resource-group $(resourceGroup) \
-                  --image $(acrLoginServer)/$(imageName):$(Build.BuildId) \
+                  --image $(acrLoginServer)/$(backendImageName):$(Build.BuildId) \
                   --revision-suffix build-$(Build.BuildId)
 
+      - job: DeployAuthService
+        displayName: 'Deploy — auth-service'
+        dependsOn: []
+        steps:
+          - task: AzureCLI@2
+            displayName: 'Azure CLI — Update auth-service container app'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                set -e
+                az extension add --name containerapp --upgrade --yes
+                az containerapp update \
+                  --name $(authContainerAppName) \
+                  --resource-group $(resourceGroup) \
+                  --image $(acrLoginServer)/$(authImageName):$(Build.BuildId) \
+                  --revision-suffix build-$(Build.BuildId)
