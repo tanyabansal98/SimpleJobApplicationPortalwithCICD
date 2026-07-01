@@ -25,11 +25,14 @@ stages:
         displayName: 'Build & Push — backend'
         steps:
           - task: Maven@4
-            displayName: 'Maven — Build backend WAR'
+            displayName: 'Maven — Build & Test backend WAR'
             inputs:
               mavenPomFile: 'backend/pom.xml'
               goals: 'clean package'
+              options: '-DfailIfNoTests=true'
               publishJUnitResults: true
+              testResultsFiles: 'backend/target/surefire-reports/TEST-*.xml'
+              failIfCoverageEmpty: false
 
           - task: AzureCLI@2
             displayName: 'Docker — Build & Push backend image'
@@ -54,11 +57,14 @@ stages:
         displayName: 'Build & Push — auth-service'
         steps:
           - task: Maven@4
-            displayName: 'Maven — Build auth-service JAR'
+            displayName: 'Maven — Build & Test auth-service JAR'
             inputs:
               mavenPomFile: 'auth-service/pom.xml'
               goals: 'clean package'
+              options: '-DfailIfNoTests=true'
               publishJUnitResults: true
+              testResultsFiles: 'auth-service/target/surefire-reports/TEST-*.xml'
+              failIfCoverageEmpty: false
 
           - task: AzureCLI@2
             displayName: 'Docker — Build & Push auth-service image'
