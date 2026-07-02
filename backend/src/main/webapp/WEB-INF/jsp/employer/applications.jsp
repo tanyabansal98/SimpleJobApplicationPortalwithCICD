@@ -36,10 +36,10 @@
                             <tr style="border-bottom: 1px solid var(--border);">
                                 <td style="padding: 1rem 0; font-weight: 500;">${app.student.email}</td>
                                 <td style="padding: 1rem 0;">
-                                    <!-- Only show the 'View' link if the student has actually uploaded a resume -->
+                                    <!-- Only show the 'View' link if a resume was uploaded when the student applied -->
                                     <c:choose>
-                                        <c:when test="${not empty app.student.studentProfile.resumeFileName}">
-                                            <a href="${pageContext.request.contextPath}/api/applications/resume/${app.student.userId}" 
+                                        <c:when test="${not empty app.resumeFileAtApply}">
+                                            <a href="${pageContext.request.contextPath}/api/applications/resume/${app.applicationId}" 
                                                target="_blank" 
                                                style="color: var(--primary); font-weight: 500; text-decoration: none;">
                                                 View

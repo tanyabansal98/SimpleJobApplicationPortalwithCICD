@@ -6,12 +6,27 @@
 </jsp:include>
 
 <div class="card">
+    <c:if test="${not empty param.success}">
+        <div class="alert alert-success">
+            ${param.success}
+        </div>
+    </c:if>
+    <c:if test="${not empty param.error}">
+        <div class="alert alert-danger">
+            ${param.error}
+        </div>
+    </c:if>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <div>
             <h1>Employer Dashboard</h1>
             <p class="muted">Manage your job postings and review applications</p>
         </div>
-        <a href="${pageContext.request.contextPath}/employer/jobs/new" class="btn btn-primary">+ Post New Job</a>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <c:if test="${sessionScope.user.role == 'ADMIN'}">
+                <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn" style="background: #f1f5f9; color: #475569;">← Back to Admin Dashboard</a>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/employer/jobs/new" class="btn btn-primary">+ Post New Job</a>
+        </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">

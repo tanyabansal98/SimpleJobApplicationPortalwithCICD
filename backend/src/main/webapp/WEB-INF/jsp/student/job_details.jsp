@@ -29,6 +29,17 @@
                         Applied ✓
                     </button>
                 </c:when>
+                <c:when test="${not hasResume}">
+                    <!-- No resume uploaded — prompt student to go to profile first -->
+                    <div style="text-align: right;">
+                        <a href="${pageContext.request.contextPath}/student/profile"
+                           style="display: inline-block; padding: 12px 30px; font-size: 1rem; font-weight: 600; border-radius: 8px;
+                                  background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; text-decoration: none;">
+                            ⚠ Upload Resume to Apply
+                        </a>
+                        <p style="font-size: 0.8rem; color: #92400e; margin-top: 6px;">A resume is required to apply for this job.</p>
+                    </div>
+                </c:when>
                 <c:otherwise>
                     <button id="applyBtn" class="btn btn-primary" onclick="applyToJob(${job.jobId})" 
                         style="padding: 12px 30px; font-size: 1.125rem;">

@@ -10,8 +10,25 @@
             <h1>Job Board</h1>
             <p class="muted">Find your next opportunity</p>
         </div>
-        <a href="${pageContext.request.contextPath}/student/dashboard" class="btn btn-primary">My Applications</a>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <a href="${pageContext.request.contextPath}/student/dashboard" class="btn" style="background: #f8fafc; color: #475569; border: 1px solid var(--border);">Back to Dashboard</a>
+            <a href="${pageContext.request.contextPath}/student/dashboard" class="btn btn-primary">My Applications</a>
+        </div>
     </div>
+
+    <!-- Resume required warning banner -->
+    <c:if test="${not hasResume}">
+        <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 8px; padding: 1rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">&#9888;</span>
+                <span style="color: #92400e; font-weight: 500;">You need to upload a resume before you can apply to any job.</span>
+            </div>
+            <a href="${pageContext.request.contextPath}/student/profile" 
+               style="background: #f59e0b; color: white; padding: 8px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; white-space: nowrap; font-size: 0.875rem;">
+                Upload Resume
+            </a>
+        </div>
+    </c:if>
 
     <!-- Search Filters -->
     <form action="${pageContext.request.contextPath}/student/jobs" method="get" 
@@ -53,6 +70,16 @@
                         <c:choose>
                             <c:when test="${isApplied}">
                                 <button class="btn" disabled style="background: #e2e8f0; color: #64748b; border: 1px solid #cbd5e1; cursor: not-allowed;">Applied</button>
+                            </c:when>
+                            <c:when test="${not hasResume}">
+                                <!-- No resume — show a disabled button that links to profile -->
+                                <a href="${pageContext.request.contextPath}/student/profile"
+                                   onclick="event.stopPropagation()"
+                                   title="Upload a resume on your profile page first"
+                                   style="display: inline-block; padding: 8px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 500;
+                                          background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; text-decoration: none; cursor: pointer;">
+                                    Upload Resume First
+                                </a>
                             </c:when>
                             <c:otherwise>
                                 <button id="apply-btn-${job.jobId}" class="btn btn-primary" 

@@ -20,6 +20,19 @@
                 <p class="muted">Sign in to continue your journey</p>
             </div>
 
+            <c:if test="${not empty sessionScope.user}">
+                <div style="margin-bottom: 1.5rem; text-align: center;">
+                    <c:choose>
+                        <c:when test="${sessionScope.user.role == 'ADMIN'}">
+                            <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn btn-primary btn-block">Back to Admin Dashboard</a>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="${pageContext.request.contextPath}/dashboard" class="btn btn-primary btn-block">Go to Dashboard</a>
+                        </c:otherwise>
+                    </c:choose>
+                </div>
+            </c:if>
+
             <c:if test="${not empty error}">
                 <div class="alert alert-danger">
                     ${error}

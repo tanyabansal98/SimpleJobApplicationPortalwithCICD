@@ -71,6 +71,14 @@ public class StudentController {
                     .collect(java.util.stream.Collectors.toSet());
             model.addAttribute("appliedJobIds", appliedJobIds);
 
+            // Check if student has a resume — Apply buttons are disabled without one.
+            boolean hasResume = false;
+            try {
+                com.job.portal.model.StudentProfile profile = profileService.getProfile(user.getUserId());
+                hasResume = profile != null && profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
+            } catch (Exception ignored) {}
+            model.addAttribute("hasResume", hasResume);
+
             return "student/jobs";
         } catch (Exception e) {
             model.addAttribute("error", "Error browsing jobs: " + e.getMessage());
@@ -86,12 +94,19 @@ public class StudentController {
             User user = (User) session.getAttribute("user");
             model.addAttribute("job", jobService.getJob(id));
 
-            // Check if the student already has a live (non-withdrawn) application for this
-            // job.
+            // Check if the student already has a live (non-withdrawn) application for this job.
             boolean alreadyApplied = applicationService.getByStudent(user.getUserId()).stream()
                     .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
                     .anyMatch(app -> app.getJob().getJobId().equals(id));
             model.addAttribute("alreadyApplied", alreadyApplied);
+
+            // Check if student has a resume — Apply button is disabled without one.
+            boolean hasResume = false;
+            try {
+                com.job.portal.model.StudentProfile profile = profileService.getProfile(user.getUserId());
+                hasResume = profile != null && profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
+            } catch (Exception ignored) {}
+            model.addAttribute("hasResume", hasResume);
 
             return "student/job_details";
         } catch (Exception e) {

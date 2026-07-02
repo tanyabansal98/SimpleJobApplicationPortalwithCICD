@@ -8,6 +8,7 @@ import com.job.portal.dao.ApplicationDAO;
 import com.job.portal.dao.JobDAO;
 import com.job.portal.dao.UserDAO;
 import com.job.portal.service.interfaces.ApplicationService;
+import com.job.portal.service.interfaces.StudentProfileService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +22,16 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationDAO applicationDAO;
     private final UserDAO userDAO;
     private final JobDAO jobDAO;
+    private final StudentProfileService profileService;
 
     public ApplicationServiceImpl(ApplicationDAO applicationDAO,
             UserDAO userDAO,
-            JobDAO jobDAO) {
+            JobDAO jobDAO,
+            StudentProfileService profileService) {
         this.applicationDAO = applicationDAO;
         this.userDAO = userDAO;
         this.jobDAO = jobDAO;
+        this.profileService = profileService;
     }
 
     // Validates the student and job exist, guards against duplicate applications,
@@ -57,10 +61,44 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
 
+        // RESUME REQUIRED: Block the application if the student has not uploaded a resume.
+        // This check runs server-side so it cannot be bypassed from the UI.
+        try {
+            com.job.portal.model.StudentProfile profile = profileService.getProfile(studentUserId);
+            if (profile == null || profile.getResumeFileName() == null || profile.getResumeFileName().isBlank()) {
+                throw new IllegalArgumentException(
+                        "You must upload a resume before applying. Please update your profile first.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-throw the resume-required error as-is
+        } catch (Exception e) {
+            // Profile doesn't exist at all — treat as no resume
+            throw new IllegalArgumentException(
+                    "You must upload a resume before applying. Please update your profile first.");
+        }
+
+        // Snapshot the student's current resume at the moment of applying.
+        // This freezes their resume for THIS application permanently, so the employer
+        // always sees the exact resume the student submitted — even if the student
+        // uploads a new resume later for a different job.
+        String resumeFile = null;
+        String resumeContentType = null;
+        try {
+            com.job.portal.model.StudentProfile profile = profileService.getProfile(studentUserId);
+            if (profile != null) {
+                resumeFile = profile.getResumeFileName();
+                resumeContentType = profile.getResumeContentType();
+            }
+        } catch (Exception ignored) {
+            // Should not reach here since we already checked above
+        }
+
         Application app = Application.builder()
                 .student(student)
                 .job(job)
                 .status(ApplicationStatus.SUBMITTED)
+                .resumeFileAtApply(resumeFile)
+                .resumeContentTypeAtApply(resumeContentType)
                 .build();
 
         return applicationDAO.save(app);

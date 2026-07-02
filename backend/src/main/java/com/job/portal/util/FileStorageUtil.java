@@ -9,7 +9,10 @@ import java.nio.file.StandardCopyOption;
 
 public class FileStorageUtil {
 
-    private static final String UPLOAD_DIR = "/Users/tanyabansal/Desktop/WebDevFinalProject/uploads/resumes";
+    // Use RESUME_UPLOAD_DIR env var if set (Docker), otherwise fall back to a local dev path.
+    private static final String UPLOAD_DIR = System.getenv("RESUME_UPLOAD_DIR") != null
+            ? System.getenv("RESUME_UPLOAD_DIR")
+            : "/app/uploads/resumes";
 
     // This is the core function that saves a resume to the server's disk
     public static String saveResume(Long userId, MultipartFile file) throws IOException {

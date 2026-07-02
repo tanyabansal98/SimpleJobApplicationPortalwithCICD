@@ -7,7 +7,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+		org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class
+})
 public class JobApplicationPortalApplication {
 
 	public static void main(String[] args) {
@@ -26,9 +28,26 @@ public class JobApplicationPortalApplication {
 					userService.register(adminEmail, "Admin123", Role.ADMIN);
 					System.out.println(">>> SEEDED ADMIN: " + adminEmail + " (Pass: Admin123)");
 				}
+
+				// Seed a Presentation Student account
+				String studentEmail = "student@portal.com";
+				try {
+					userService.findByEmail(studentEmail);
+				} catch (Exception e) {
+					userService.register(studentEmail, "Student123", Role.STUDENT);
+					System.out.println(">>> SEEDED STUDENT: " + studentEmail + " (Pass: Student123)");
+				}
+
+				// Seed a Presentation Employer account
+				String employerEmail = "employer@portal.com";
+				try {
+					userService.findByEmail(employerEmail);
+				} catch (Exception e) {
+					userService.register(employerEmail, "Employer123", Role.EMPLOYER);
+					System.out.println(">>> SEEDED EMPLOYER: " + employerEmail + " (Pass: Employer123)");
+				}
 			} catch (Exception e) {
 				// Silent fail if seeding has issues
-				// Adding a comment here for testing
 			}
 		};
 	}

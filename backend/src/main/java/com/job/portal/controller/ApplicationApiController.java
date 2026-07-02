@@ -15,12 +15,9 @@ import java.util.Map;
 public class ApplicationApiController {
 
     private final ApplicationService applicationService;
-    private final com.job.portal.service.interfaces.StudentProfileService profileService;
 
-    public ApplicationApiController(ApplicationService applicationService,
-            com.job.portal.service.interfaces.StudentProfileService profileService) {
+    public ApplicationApiController(ApplicationService applicationService) {
         this.applicationService = applicationService;
-        this.profileService = profileService;
     }
 
     // This endpoint handles when a student clicks 'Apply' on a job
@@ -78,9 +75,10 @@ public class ApplicationApiController {
         }
     }
 
-    // A secure endpoint for Employers to view a student's resume
-    @GetMapping("/resume/{userId}")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadResume(@PathVariable Long userId,
+    // A secure endpoint for Employers to view the resume a student submitted with a specific application.
+    // Serves the SNAPSHOTTED resume (frozen at apply-time), not the student's current resume.
+    @GetMapping("/resume/{applicationId}")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadResume(@PathVariable Long applicationId,
             HttpSession session) {
         User user = (User) session.getAttribute("user");
 
@@ -91,24 +89,27 @@ public class ApplicationApiController {
         }
 
         try {
-            // Fetch the profile to get the stored filename
-            com.job.portal.model.StudentProfile profile = profileService.getProfile(userId);
-            if (profile.getResumeFileName() == null) {
+            // Fetch the application — the resume file is stored directly on this record
+            com.job.portal.model.Application application = applicationService.getById(applicationId);
+            if (application == null || application.getResumeFileAtApply() == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            // Find the file on the server's disk
+            // Resolve the snapshotted resume file on disk
             java.nio.file.Path filePath = com.job.portal.util.FileStorageUtil
-                    .getResumePath(profile.getResumeFileName());
+                    .getResumePath(application.getResumeFileAtApply());
             org.springframework.core.io.Resource resource = new org.springframework.core.io.UrlResource(
                     filePath.toUri());
 
             if (resource.exists()) {
-                // Stream the file directly to the browser
+                String contentType = application.getResumeContentTypeAtApply() != null
+                        ? application.getResumeContentTypeAtApply()
+                        : "application/octet-stream";
+                // Stream the snapshotted resume file to the browser
                 return ResponseEntity.ok()
-                        .contentType(org.springframework.http.MediaType.parseMediaType(profile.getResumeContentType()))
+                        .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
                         .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
-                                "inline; filename=\"" + profile.getResumeFileName() + "\"")
+                                "inline; filename=\"" + application.getResumeFileAtApply() + "\"")
                         .body(resource);
             } else {
                 return ResponseEntity.notFound().build();

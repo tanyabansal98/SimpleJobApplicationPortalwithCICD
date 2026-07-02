@@ -5,8 +5,11 @@
 
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h1>User Management</h1>
-        <p class="muted">Manage platform access and roles</p>
+        <div>
+            <h1>User Management</h1>
+            <p class="muted">Manage platform access and roles</p>
+        </div>
+        <a href="${pageContext.request.contextPath}/admin/dashboard" class="btn" style="background: white; border: 1px solid var(--border); color: var(--primary); text-decoration: none;">Back to Dashboard</a>
     </div>
 
     <table style="width: 100%; border-collapse: collapse;">

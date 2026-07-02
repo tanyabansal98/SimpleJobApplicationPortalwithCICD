@@ -35,6 +35,15 @@ public class Application implements java.io.Serializable {
     @Column(name = "EMPLOYER_NOTES", length = 2000)
     private String employerNotes;
 
+    // Snapshot of the resume file that was on file when this application was submitted.
+    // This ensures the employer always sees the resume used for THIS application,
+    // even if the student later uploads a new resume for a different job.
+    @Column(name = "RESUME_FILE_AT_APPLY", length = 500)
+    private String resumeFileAtApply;
+
+    @Column(name = "RESUME_CONTENT_TYPE_AT_APPLY", length = 100)
+    private String resumeContentTypeAtApply;
+
     public Application() {}
 
     // Getters and Setters
@@ -58,6 +67,12 @@ public class Application implements java.io.Serializable {
 
     public String getEmployerNotes() { return employerNotes; }
     public void setEmployerNotes(String employerNotes) { this.employerNotes = employerNotes; }
+
+    public String getResumeFileAtApply() { return resumeFileAtApply; }
+    public void setResumeFileAtApply(String resumeFileAtApply) { this.resumeFileAtApply = resumeFileAtApply; }
+
+    public String getResumeContentTypeAtApply() { return resumeContentTypeAtApply; }
+    public void setResumeContentTypeAtApply(String resumeContentTypeAtApply) { this.resumeContentTypeAtApply = resumeContentTypeAtApply; }
 
     public String getFormattedAppliedAt() {
         if (appliedAt == null) return "N/A";
@@ -84,16 +99,22 @@ public class Application implements java.io.Serializable {
         private User student;
         private Job job;
         private ApplicationStatus status;
+        private String resumeFileAtApply;
+        private String resumeContentTypeAtApply;
 
         public ApplicationBuilder student(User student) { this.student = student; return this; }
         public ApplicationBuilder job(Job job) { this.job = job; return this; }
         public ApplicationBuilder status(ApplicationStatus status) { this.status = status; return this; }
+        public ApplicationBuilder resumeFileAtApply(String resumeFileAtApply) { this.resumeFileAtApply = resumeFileAtApply; return this; }
+        public ApplicationBuilder resumeContentTypeAtApply(String resumeContentTypeAtApply) { this.resumeContentTypeAtApply = resumeContentTypeAtApply; return this; }
 
         public Application build() {
             Application app = new Application();
             app.setStudent(student);
             app.setJob(job);
             app.setStatus(status);
+            app.setResumeFileAtApply(resumeFileAtApply);
+            app.setResumeContentTypeAtApply(resumeContentTypeAtApply);
             return app;
         }
     }

@@ -20,18 +20,21 @@
                     <div style="font-weight: 500;">Current Resume</div>
                     <div id="resume-name" class="muted" style="font-size: 0.875rem;"><c:out value="${profile.resumeFileName}"/></div>
                 </div>
-                <p class="muted" style="margin-top: 1rem; font-size: 0.875rem;">Resume has been successfully uploaded.</p>
             </div>
 
-            <!-- Show upload section only if NO resume exists -->
-            <div id="upload-container" style="${not empty profile.resumeFileName ? 'display: none;' : ''}">
-                <div id="no-resume-msg" style="margin-bottom: 1.5rem;">
-                    <p class="muted">No resume uploaded yet.</p>
+            <!-- Upload and update section is always visible -->
+            <div id="upload-container">
+                <div style="margin-bottom: 1rem;">
+                    <span style="font-weight: 500; font-size: 0.95rem; color: var(--primary);">Upload New/Replacement Resume:</span>
                 </div>
-
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <input type="file" id="resumeFile" accept=".pdf,.docx" style="flex: 1; padding: 8px; background: white; border: 1px solid var(--border); border-radius: 6px;">
-                    <button onclick="uploadResume()" class="btn btn-primary" id="uploadBtn">Upload Resume</button>
+                    <button onclick="uploadResume()" class="btn btn-primary" id="uploadBtn">
+                        <c:choose>
+                            <c:when test="${not empty profile.resumeFileName}">Update Resume</c:when>
+                            <c:otherwise>Upload Resume</c:otherwise>
+                        </c:choose>
+                    </button>
                 </div>
             </div>
         </div>
@@ -70,17 +73,18 @@ function uploadResume() {
     
     xhr.onload = function() {
         btn.disabled = false;
-        btn.innerText = 'Upload Resume';
         
         if (xhr.status === 200) {
             const data = JSON.parse(xhr.responseText);
             showNotification('Resume uploaded successfully!', false);
             
-            // Success: Switch UI to display mode and hide upload
+            // Update UI elements
             document.getElementById('resume-display').style.display = 'block';
             document.getElementById('resume-name').innerText = data.fileName;
-            document.getElementById('upload-container').style.display = 'none';
+            btn.innerText = 'Update Resume';
+            fileInput.value = ''; // Reset file input
         } else {
+            btn.innerText = document.getElementById('resume-name').innerText.trim() !== '' ? 'Update Resume' : 'Upload Resume';
             try {
                 const data = JSON.parse(xhr.responseText);
                 showNotification(data.message || 'Upload failed.', true);
