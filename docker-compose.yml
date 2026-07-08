@@ -53,12 +53,14 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/jobportal
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=PostgresPassword123
       - SPRING_DATA_REDIS_HOST=redis
       - AUTH_SERVICE_URL=http://auth-service:9090
       - RESUME_UPLOAD_DIR=/app/uploads/resumes
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - resume_data:/app/uploads/resumes
     depends_on:
