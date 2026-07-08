@@ -5,6 +5,7 @@ import com.job.portal.model.User;
 import com.job.portal.dao.StudentProfileDAO;
 import com.job.portal.dao.UserDAO;
 import com.job.portal.service.interfaces.StudentProfileService;
+import com.job.portal.util.ResumeTextExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +25,16 @@ public class StudentProfileServiceImpl implements StudentProfileService {
 
     private final StudentProfileDAO studentProfileDAO;
     private final UserDAO userDAO;
+    private final ResumeTextExtractor resumeTextExtractor;
 
     @Value("${app.upload.dir:/Users/tanyabansal/Desktop/WebDevFinalProject/uploads/resumes}")
     private String uploadDir;
 
     public StudentProfileServiceImpl(StudentProfileDAO studentProfileDAO,
-            UserDAO userDAO) {
+            UserDAO userDAO, ResumeTextExtractor resumeTextExtractor) {
         this.studentProfileDAO = studentProfileDAO;
         this.userDAO = userDAO;
+        this.resumeTextExtractor = resumeTextExtractor;
     }
 
     // Title-cases a name so it looks consistent regardless of how the student typed it.
@@ -93,12 +96,17 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     public void uploadResume(Long userId, MultipartFile file) {
         try {
             String fileName = com.job.portal.util.FileStorageUtil.saveResume(userId, file);
-            
+
             StudentProfile profile = getProfile(userId);
             profile.setResumeFileName(fileName);
             profile.setResumeContentType(file.getContentType());
+
+            // NEW: extract plain text from the resume so it can be embedded later
+            String extractedText = resumeTextExtractor.extractText(file);
+            profile.setResumeText(extractedText);
+
             studentProfileDAO.save(profile);
-            
+
         } catch (IOException e) {
             throw new RuntimeException("Could not store the file: " + e.getMessage());
         }
