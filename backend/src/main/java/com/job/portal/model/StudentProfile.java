@@ -51,6 +51,9 @@ public class StudentProfile implements java.io.Serializable {
     @Column(name = "RESUME_CONTENT_TYPE", length = 100)
     private String resumeContentType;
 
+    @Column(name = "resume_text", columnDefinition = "TEXT")
+    private String resumeText;
+
     public StudentProfile() {}
 
     // Getters and Setters
@@ -95,4 +98,7 @@ public class StudentProfile implements java.io.Serializable {
 
     public String getResumeContentType() { return resumeContentType; }
     public void setResumeContentType(String resumeContentType) { this.resumeContentType = resumeContentType; }
+
+    public String getResumeText() { return resumeText; }
+    public void setResumeText(String resumeText) { this.resumeText = resumeText; }
 }

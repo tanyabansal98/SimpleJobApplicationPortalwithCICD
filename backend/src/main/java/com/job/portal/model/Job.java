@@ -20,7 +20,7 @@ public class Job implements java.io.Serializable {
     @Column(name = "TITLE", nullable = false, length = 200)
     private String title;
 
-    @Column(name = "DESCRIPTION", length = 4000)
+    @Column(name = "DESCRIPTION", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "LOCATION", length = 200)

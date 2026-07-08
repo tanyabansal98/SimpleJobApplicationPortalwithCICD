@@ -1,3 +1,4 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <jsp:include page="../common/header.jsp">
     <jsp:param name="title" value="Post New Job"/>
 </jsp:include>
@@ -7,6 +8,13 @@
         <h1>Post a New Job</h1>
         <p class="muted">Fill in the details to attract the best candidates</p>
     </div>
+
+    <!-- Error Alert Display -->
+    <c:if test="${not empty error && error != ''}">
+        <div class="alert alert-danger" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 6px; background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; font-weight: 500;">
+            ${error}
+        </div>
+    </c:if>
 
     <form action="${pageContext.request.contextPath}/employer/jobs/new" method="post">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
