@@ -56,7 +56,7 @@ public class FileStorageUtil {
         }
 
         // We name the file using the userId to ensure it's unique and easy to find
-        String fileName = userId + "_resume" + extension;
+        String fileName = userId + "_resume_" + System.currentTimeMillis() + extension;
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 

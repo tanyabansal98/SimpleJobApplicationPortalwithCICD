@@ -54,6 +54,9 @@ public class StudentProfile implements java.io.Serializable {
     @Column(name = "resume_text", columnDefinition = "TEXT")
     private String resumeText;
 
+    @Column(name = "resume_embedding", columnDefinition = "TEXT")
+    private String resumeEmbedding;
+
     public StudentProfile() {}
 
     // Getters and Setters
@@ -101,4 +104,7 @@ public class StudentProfile implements java.io.Serializable {
 
     public String getResumeText() { return resumeText; }
     public void setResumeText(String resumeText) { this.resumeText = resumeText; }
+
+    public String getResumeEmbedding() { return resumeEmbedding; }
+    public void setResumeEmbedding(String resumeEmbedding) { this.resumeEmbedding = resumeEmbedding; }
 }

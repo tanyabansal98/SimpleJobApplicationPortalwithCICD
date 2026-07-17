@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.job.portal.service.interfaces.EmbeddingService;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,15 +27,17 @@ public class StudentProfileServiceImpl implements StudentProfileService {
     private final StudentProfileDAO studentProfileDAO;
     private final UserDAO userDAO;
     private final ResumeTextExtractor resumeTextExtractor;
+    private final EmbeddingService embeddingService;
 
     @Value("${app.upload.dir:/Users/tanyabansal/Desktop/WebDevFinalProject/uploads/resumes}")
     private String uploadDir;
 
     public StudentProfileServiceImpl(StudentProfileDAO studentProfileDAO,
-            UserDAO userDAO, ResumeTextExtractor resumeTextExtractor) {
+            UserDAO userDAO, ResumeTextExtractor resumeTextExtractor, EmbeddingService embeddingService) {
         this.studentProfileDAO = studentProfileDAO;
         this.userDAO = userDAO;
         this.resumeTextExtractor = resumeTextExtractor;
+        this.embeddingService = embeddingService;
     }
 
     // Title-cases a name so it looks consistent regardless of how the student typed it.
@@ -105,10 +108,16 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             String extractedText = resumeTextExtractor.extractText(file);
             profile.setResumeText(extractedText);
 
+            // NEW: generate the embedding once at upload time, so search doesn't need to recompute it.
+            float[] embedding = embeddingService.generateEmbedding(extractedText);
+            profile.setResumeEmbedding(com.job.portal.util.EmbeddingUtil.toJson(embedding));
+
             studentProfileDAO.save(profile);
 
         } catch (IOException e) {
             throw new RuntimeException("Could not store the file: " + e.getMessage());
-        }
+        } catch (Exception e) {
+        throw new RuntimeException("Resume upload failed: " + e.getMessage(), e);
+    }
     }
 }

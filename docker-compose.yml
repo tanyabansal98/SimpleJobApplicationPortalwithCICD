@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_DB=jobportal
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=PostgresPassword123
+      - POSTGRES_PASSWORD=l
     mem_limit: 200m
     volumes:
       - postgres_data:/var/lib/postgresql/data
