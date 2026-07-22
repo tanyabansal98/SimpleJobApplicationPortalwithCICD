@@ -74,6 +74,23 @@ public class JobServiceImpl implements JobService {
         qdrantService.upsertVector(QDRANT_JOBS_COLLECTION, job.getJobId(), vector, payload);
     }
 
+    // TEMPORARY: one-time backfill for jobs that existed before Qdrant embedding was added.
+    // Loops through every job in Postgres and pushes its embedding into Qdrant.
+    // Safe to run multiple times — embedAndStoreJob() just overwrites the same jobId each time.
+    public int backfillJobEmbeddings() {
+    List<Job> allJobs = jobDAO.findAll();
+    int successCount = 0;
+        for (Job job : allJobs) {
+            try {
+                embedAndStoreJob(job);
+                successCount++;
+            } catch (Exception e) {
+                System.err.println("Failed to embed job " + job.getJobId() + ": " + e.getMessage());
+            }
+        }
+        return successCount;
+    }
+
     @Override
     public Job createJob(Job job) {
 

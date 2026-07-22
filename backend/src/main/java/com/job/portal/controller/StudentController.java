@@ -3,27 +3,33 @@ package com.job.portal.controller;
 import com.job.portal.dto.JobMatchDTO;
 import com.job.portal.model.User;
 import com.job.portal.model.StudentProfile;
+import com.job.portal.model.EmployerProfile;
+import com.job.portal.model.Job;
 import com.job.portal.service.interfaces.ApplicationService;
 import com.job.portal.service.interfaces.JobService;
 import com.job.portal.service.interfaces.StudentProfileService;
+import com.job.portal.service.interfaces.EmployerProfileService;
 import com.job.portal.service.impl.QdrantSearchService;
 import com.job.portal.util.EmbeddingUtil;
+import com.job.portal.service.interfaces.JobRerankingService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import com.job.portal.model.Job;
-import java.util.Set;
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 // Handles all the actions a student can do once they're signed in.
 
@@ -35,15 +41,21 @@ public class StudentController {
     private final ApplicationService applicationService;
     private final StudentProfileService profileService;
     private final QdrantSearchService qdrantSearchService;
+    private final EmployerProfileService employerProfileService;
+    private final JobRerankingService jobRerankingService;
 
     public StudentController(JobService jobService,
             ApplicationService applicationService,
             StudentProfileService profileService,
-            QdrantSearchService qdrantSearchService) {
+            QdrantSearchService qdrantSearchService,
+            EmployerProfileService employerProfileService,
+            JobRerankingService jobRerankingService) {
         this.jobService = jobService;
         this.applicationService = applicationService;
         this.profileService = profileService;
         this.qdrantSearchService = qdrantSearchService;
+        this.employerProfileService = employerProfileService;
+        this.jobRerankingService = jobRerankingService;
     }
 
     // The student's personal overview page - Shows all of their active job
@@ -54,10 +66,10 @@ public class StudentController {
         try {
             User user = (User) session.getAttribute("user");
             // Only show applications the student is still actively pursuing.
-            java.util.List<com.job.portal.model.Application> activeApps = applicationService.getByStudent(user.getUserId())
+            List<com.job.portal.model.Application> activeApps = applicationService.getByStudent(user.getUserId())
                     .stream()
                     .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
             model.addAttribute("applications", activeApps);
             return "student/dashboard";
         } catch (Exception e) {
@@ -81,16 +93,16 @@ public class StudentController {
             model.addAttribute("jobs", jobService.listJobs(title, location));
 
             // Track jobs student has already applied to (exclude withdrawn).
-            java.util.Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
+            Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
                     .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
                     .map(app -> app.getJob().getJobId())
-                    .collect(java.util.stream.Collectors.toSet());
+                    .collect(Collectors.toSet());
             model.addAttribute("appliedJobIds", appliedJobIds);
 
             // Check if student has a resume — Apply buttons are disabled without one.
             boolean hasResume = false;
             try {
-                com.job.portal.model.StudentProfile profile = profileService.getProfile(user.getUserId());
+                StudentProfile profile = profileService.getProfile(user.getUserId());
                 hasResume = profile != null && profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
             } catch (Exception ignored) {}
             model.addAttribute("hasResume", hasResume);
@@ -98,6 +110,29 @@ public class StudentController {
             return "student/jobs";
         } catch (Exception e) {
             model.addAttribute("error", "Error browsing jobs: " + e.getMessage());
+            return "student/dashboard";
+        }
+    }
+
+    /**
+     * Renders the recommended jobs view for the logged-in student.
+     */
+    @GetMapping("/jobs/matches")
+    public String getRecommendedJobs(HttpSession session, Model model) {
+        try {
+            User user = (User) session.getAttribute("user");
+            
+            // Check if student has a resume — Apply buttons are disabled without one.
+            boolean hasResume = false;
+            try {
+                StudentProfile profile = profileService.getProfile(user.getUserId());
+                hasResume = profile != null && profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
+            } catch (Exception ignored) {}
+            model.addAttribute("hasResume", hasResume);
+
+            return "student/recommended_jobs";
+        } catch (Exception e) {
+            model.addAttribute("error", "Error loading matches: " + e.getMessage());
             return "student/dashboard";
         }
     }
@@ -119,7 +154,7 @@ public class StudentController {
             // Check if student has a resume — Apply button is disabled without one.
             boolean hasResume = false;
             try {
-                com.job.portal.model.StudentProfile profile = profileService.getProfile(user.getUserId());
+                StudentProfile profile = profileService.getProfile(user.getUserId());
                 hasResume = profile != null && profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
             } catch (Exception ignored) {}
             model.addAttribute("hasResume", hasResume);
@@ -147,18 +182,18 @@ public class StudentController {
 
     // Handles resume file uploads from the profile page.
 
-    @org.springframework.web.bind.annotation.PostMapping("/api/resume")
+    @PostMapping("/api/resume")
     @ResponseBody
-    public ResponseEntity<java.util.Map<String, Object>> uploadResume(
-            @org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+    public ResponseEntity<Map<String, Object>> uploadResume(
+            @RequestParam("file") MultipartFile file,
             HttpSession session) {
 
         User user = (User) session.getAttribute("user");
-        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        Map<String, Object> response = new HashMap<>();
 
         try {
             profileService.uploadResume(user.getUserId(), file);
-            com.job.portal.model.StudentProfile profile = profileService.getProfile(user.getUserId());
+            StudentProfile profile = profileService.getProfile(user.getUserId());
             response.put("success", true);
             // Send back the stored filename so the UI can reflect the change right away.
             response.put("fileName", profile.getResumeFileName());
@@ -177,56 +212,69 @@ public class StudentController {
     @GetMapping("/api/jobs/matches")
     @ResponseBody
     public ResponseEntity<?> getMatchingJobs(
-        @RequestParam(defaultValue = "10") int topN,
-        HttpSession session) {
+            @RequestParam(defaultValue = "10") int topN,
+            HttpSession session) {
 
-    User user = (User) session.getAttribute("user");
-    if (user == null) {
-        return ResponseEntity.status(401).body("Not logged in");
-    }
-
-    try {
-        StudentProfile profile = profileService.getProfile(user.getUserId());
-        if (profile.getResumeEmbedding() == null) {
-            return ResponseEntity.badRequest().body("No resume uploaded yet");
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return ResponseEntity.status(401).body("Not logged in");
         }
 
-        float[] queryVector = EmbeddingUtil.fromJson(profile.getResumeEmbedding());
-        Map<Long, Double> jobIdToScore = qdrantSearchService.searchSimilarJobIds(queryVector, topN);
-
-        // Compute these ONCE, reused for every match — same pattern as browseJobs().
-        boolean hasResume = profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
-        Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
-                .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
-                .map(app -> app.getJob().getJobId())
-                .collect(Collectors.toSet());
-
-        List<JobMatchDTO> matches = new ArrayList<>();
-        for (Map.Entry<Long, Double> entry : jobIdToScore.entrySet()) {
-            Long jobId = entry.getKey();
-            try {
-                Job job = jobService.getJob(jobId); // real, current data from Postgres
-
-                JobMatchDTO dto = new JobMatchDTO();
-                dto.setJobId(job.getJobId());
-                dto.setTitle(job.getTitle());
-                dto.setDescription(job.getDescription());
-                dto.setRequiredSkills(job.getRequiredSkills());
-                dto.setLocation(job.getLocation());
-                dto.setCompanyName(job.getEmployer() != null ? job.getEmployer().getCompanyName() : "");
-                dto.setScore(entry.getValue());
-                dto.setAlreadyApplied(appliedJobIds.contains(jobId));
-                dto.setHasResume(hasResume);
-
-                matches.add(dto);
-            } catch (Exception e) {
-                // Job may have been deleted since it was embedded — skip it rather than fail the whole request.
+        try {
+            StudentProfile profile = profileService.getProfile(user.getUserId());
+            if (profile.getResumeEmbedding() == null) {
+                return ResponseEntity.badRequest().body("No resume uploaded yet");
             }
-        }
 
-        return ResponseEntity.ok(matches);
-    } catch (Exception e) {
-        return ResponseEntity.internalServerError().body("Failed to fetch matches: " + e.getMessage());
-    }
+            float[] queryVector = EmbeddingUtil.fromJson(profile.getResumeEmbedding());
+            Map<Long, Double> jobIdToScore = qdrantSearchService.searchSimilarJobIds(queryVector, topN);
+
+            // Compute these ONCE, reused for every match — same pattern as browseJobs().
+            boolean hasResume = profile.getResumeFileName() != null && !profile.getResumeFileName().isBlank();
+            Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
+                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .map(app -> app.getJob().getJobId())
+                    .collect(Collectors.toSet());
+
+            List<JobMatchDTO> matches = new ArrayList<>();
+            for (Map.Entry<Long, Double> entry : jobIdToScore.entrySet()) {
+                Long jobId = entry.getKey();
+                try {
+                    Job job = jobService.getJob(jobId); // real, current data from Postgres
+
+                    // Company name lives on EmployerProfile, not User, so we look it up separately.
+                    String companyName = "";
+                    if (job.getEmployer() != null) {
+                        try {
+                            EmployerProfile employerProfile = employerProfileService.getProfile(job.getEmployer().getUserId());
+                            companyName = employerProfile.getCompanyName() != null ? employerProfile.getCompanyName() : "";
+                        } catch (Exception ignored) {
+                            // If the employer profile can't be found for some reason, just leave companyName blank
+                            // rather than failing the whole matches request.
+                        }
+                    }
+
+                    JobMatchDTO dto = new JobMatchDTO();
+                    dto.setJobId(job.getJobId());
+                    dto.setTitle(job.getTitle());
+                    dto.setDescription(job.getDescription());
+                    dto.setRequiredSkills(job.getRequiredSkills());
+                    dto.setLocation(job.getLocation());
+                    dto.setCompanyName(companyName);
+                    dto.setScore(entry.getValue());
+                    dto.setAlreadyApplied(appliedJobIds.contains(jobId));
+                    dto.setHasResume(hasResume);
+
+                    matches.add(dto);
+                } catch (Exception e) {
+                    // Job may have been deleted since it was embedded — skip it rather than fail the whole request.
+                }
+            }
+            matches = jobRerankingService.rerank(profile.getResumeText(), matches);
+            return ResponseEntity.ok(matches);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to fetch matches: " + e.getMessage());
+        }
     }
 }

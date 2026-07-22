@@ -12,6 +12,7 @@
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
             <a href="${pageContext.request.contextPath}/student/dashboard" class="btn" style="background: #f8fafc; color: #475569; border: 1px solid var(--border);">Back to Dashboard</a>
+            <a href="${pageContext.request.contextPath}/student/jobs/matches" class="btn btn-primary">Jobs For You</a>
             <a href="${pageContext.request.contextPath}/student/dashboard" class="btn btn-primary">My Applications</a>
         </div>
     </div>

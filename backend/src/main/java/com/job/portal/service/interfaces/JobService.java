@@ -27,4 +27,7 @@ public interface JobService {
 
     // Fetches a single job by ID, throwing an error if it doesn't exist.
     Job getJob(Long jobId);
+
+    // TEMPORARY: runs once to backfill embeddings for all existing jobs.
+    int backfillJobEmbeddings();
 }

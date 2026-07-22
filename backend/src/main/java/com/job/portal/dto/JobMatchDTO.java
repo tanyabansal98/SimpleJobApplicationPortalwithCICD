@@ -10,6 +10,7 @@ public class JobMatchDTO {
     private double score;
     private boolean alreadyApplied;
     private boolean hasResume;
+    private String reason;
 
     public Long getJobId() { return jobId; }
     public void setJobId(Long jobId) { this.jobId = jobId; }
@@ -29,4 +30,6 @@ public class JobMatchDTO {
     public void setAlreadyApplied(boolean alreadyApplied) { this.alreadyApplied = alreadyApplied; }
     public boolean isHasResume() { return hasResume; }
     public void setHasResume(boolean hasResume) { this.hasResume = hasResume; }
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
 }
