@@ -32,5 +32,13 @@ VALUES (100, 2, 'Software Engineer Intern', 'Join our team as a summer intern wo
 ON CONFLICT DO NOTHING;
 
 -- Reset sequences so next auto-generated IDs don't collide with seeded explicit IDs
-SELECT setval(pg_get_serial_sequence('users', 'user_id'), 10);
-SELECT setval(pg_get_serial_sequence('jobs', 'job_id'), 200);
+SELECT setval(
+    pg_get_serial_sequence('users', 'user_id'),
+    GREATEST(10, (SELECT last_value FROM users_user_id_seq)),
+    true
+);
+SELECT setval(
+    pg_get_serial_sequence('jobs', 'job_id'),
+    GREATEST(200, (SELECT last_value FROM jobs_job_id_seq)),
+    true
+);
