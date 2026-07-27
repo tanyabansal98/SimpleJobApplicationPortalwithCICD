@@ -17,14 +17,26 @@ public class QdrantServiceImpl implements QdrantService {
     @Value("${qdrant.url:http://localhost:6333}")
     private String qdrantUrl;
 
+    @Value("${qdrant.api.key:}")
+    private String qdrantApiKey;
+
     private final RestTemplate restTemplate = new RestTemplate();
+
+    // Builds headers shared by every Qdrant request — adds the api-key header
+    // only if one is actually configured (local dev has none, Azure/cloud does).
+    private HttpHeaders buildHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (qdrantApiKey != null && !qdrantApiKey.isBlank()) {
+            headers.set("api-key", qdrantApiKey);
+        }
+        return headers;
+    }
 
     @Override
     public void upsertVector(String collectionName, Long pointId, float[] vector, Map<String, Object> payload) {
         String url = qdrantUrl + "/collections/" + collectionName + "/points";
 
-        // Qdrant expects vectors as a plain list of numbers, not a Java float[].
-        // We convert here so the JSON we send matches what Qdrant's API expects.
         List<Float> vectorList = new java.util.ArrayList<>(vector.length);
         for (float v : vector) {
             vectorList.add(v);
@@ -40,10 +52,7 @@ public class QdrantServiceImpl implements QdrantService {
                 "points", List.of(point)
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, buildHeaders());
 
         try {
             restTemplate.put(url, request);
@@ -60,14 +69,9 @@ public class QdrantServiceImpl implements QdrantService {
                 "ids", List.of(pointId)
         );
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, buildHeaders());
 
         try {
-            // RestTemplate doesn't have a delete method that takes a body, so we use exchange.
-            // We expect 200 OK or 202 Accepted on success.
             restTemplate.exchange(url, org.springframework.http.HttpMethod.DELETE, request, Void.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to delete vector from Qdrant collection '" + collectionName + "': " + e.getMessage(), e);

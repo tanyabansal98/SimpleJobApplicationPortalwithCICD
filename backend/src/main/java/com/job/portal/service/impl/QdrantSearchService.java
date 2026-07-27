@@ -1,6 +1,8 @@
 package com.job.portal.service.impl;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,11 +14,11 @@ public class QdrantSearchService {
     @Value("${qdrant.url:http://qdrant:6333}")
     private String qdrantUrl;
 
+    @Value("${qdrant.api.key:}")
+    private String qdrantApiKey;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Returns raw match results as jobId -> similarity score.
-    // Job details are deliberately NOT read here — Qdrant is only used to find
-    // WHICH jobs match; the actual data always comes fresh from Postgres.
     public Map<Long, Double> searchSimilarJobIds(float[] queryVector, int topN) {
         String searchUrl = qdrantUrl + "/collections/jobs/points/search";
 
@@ -25,9 +27,15 @@ public class QdrantSearchService {
         body.put("limit", topN);
         body.put("with_payload", true);
 
-        Map<String, Object> response = restTemplate.postForObject(searchUrl, body, Map.class);
+        HttpHeaders headers = new HttpHeaders();
+        if (qdrantApiKey != null && !qdrantApiKey.isBlank()) {
+            headers.set("api-key", qdrantApiKey);
+        }
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        Map<Long, Double> jobIdToScore = new LinkedHashMap<>(); // preserves Qdrant's ranking order
+        Map<String, Object> response = restTemplate.postForObject(searchUrl, request, Map.class);
+
+        Map<Long, Double> jobIdToScore = new LinkedHashMap<>();
         if (response == null || response.get("result") == null) {
             return jobIdToScore;
         }
