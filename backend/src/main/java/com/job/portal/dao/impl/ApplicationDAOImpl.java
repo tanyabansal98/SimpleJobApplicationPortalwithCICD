@@ -81,6 +81,7 @@ public class ApplicationDAOImpl implements ApplicationDAO {
     public List<Application> findByJob_JobId(Long jobId) {
         String hql = "FROM Application a JOIN FETCH a.student WHERE a.job.jobId = :jobId";
         Query<Application> query = getSession().createQuery(hql, Application.class);
+
         query.setParameter("jobId", jobId);
         return query.list();
     }

@@ -5,6 +5,8 @@ import com.job.portal.model.enums.Role;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -15,41 +17,37 @@ public class SessionInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
-        // SECURITY NOTE: InputValidator.isClean() can be called here to validate
-        // all request parameters before they reach any controller.
-        // Example:
-        // java.util.Enumeration<String> params = request.getParameterNames();
-        // while (params.hasMoreElements()) {
-        // String value = request.getParameter(params.nextElement());
-        // if (value != null && !InputValidator.isClean(value)) {
-        // response.sendRedirect("/login?error=Invalid+input+detected");
-        // return false;
-        // }
-        // }
-
         String path = request.getServletPath();
-        if (path == null) path = "";
+        if (path == null)
+            path = "";
 
         // 1. Allow public routes
-        if (path.isEmpty() || path.equals("/") || path.equals("/login") || path.equals("/register") || path.equals("/forgot-password")
-                || path.startsWith("/css/") || path.startsWith("/js/") || path.endsWith(".jsp") || request.getQueryString() != null && request.getQueryString().contains("error")) {
+        if (path.isEmpty() || path.equals("/") || path.equals("/login") || path.equals("/register")
+                || path.equals("/forgot-password")
+                || path.startsWith("/css/") || path.startsWith("/js/") || path.endsWith(".jsp")
+                || request.getQueryString() != null && request.getQueryString().contains("error")) {
             return true;
         }
 
-        // 2. Check session
+        // 2. Check if JWT already authenticated this request
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            return true; // JWT is valid, let the request through
+        }
+
+        // 3. Check session (existing browser login)
         HttpSession session = request.getSession(false);
         User user = (session != null) ? (User) session.getAttribute("user") : null;
 
         if (user == null) {
-            // Prevent infinite loop: if we are already on the root with an error, don't redirect again
             if (path.isEmpty() || path.equals("/")) {
-                return true; 
+                return true;
             }
             response.sendRedirect(request.getContextPath() + "/?error=Please login first.");
             return false;
         }
 
-        // 3. Role-based access
+        // 4. Role-based access
         if (path.startsWith("/admin/") && user.getRole() != Role.ADMIN) {
             response.sendRedirect("/dashboard?error=Unauthorized access.");
             return false;

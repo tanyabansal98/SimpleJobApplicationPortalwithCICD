@@ -5,12 +5,12 @@ import com.job.portal.model.User;
 import com.job.portal.dao.StudentProfileDAO;
 import com.job.portal.dao.UserDAO;
 import com.job.portal.service.interfaces.StudentProfileService;
-import com.job.portal.util.ResumeTextExtractor;
+//import com.job.portal.util.ResumeTextExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.job.portal.service.interfaces.EmbeddingService;
+//import com.job.portal.service.interfaces.EmbeddingService;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,30 +19,40 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 // Handles loading, updating, and resume uploads for student profiles.
 @Service
 @Transactional
 public class StudentProfileServiceImpl implements StudentProfileService {
 
+    private static final Logger log = LoggerFactory.getLogger(StudentProfileServiceImpl.class);
+
     private final StudentProfileDAO studentProfileDAO;
     private final UserDAO userDAO;
-    private final ResumeTextExtractor resumeTextExtractor;
-    private final EmbeddingService embeddingService;
+    // private final ResumeTextExtractor resumeTextExtractor;
+    // private final EmbeddingService embeddingService;
 
     @Value("${app.upload.dir:/Users/tanyabansal/Desktop/WebDevFinalProject/uploads/resumes}")
     private String uploadDir;
 
     public StudentProfileServiceImpl(StudentProfileDAO studentProfileDAO,
-            UserDAO userDAO, ResumeTextExtractor resumeTextExtractor, EmbeddingService embeddingService) {
+            UserDAO userDAO// ,
+    // ResumeTextExtractor resumeTextExtractor,
+    // EmbeddingService embeddingService
+    ) {
         this.studentProfileDAO = studentProfileDAO;
         this.userDAO = userDAO;
-        this.resumeTextExtractor = resumeTextExtractor;
-        this.embeddingService = embeddingService;
+        // this.resumeTextExtractor = resumeTextExtractor;
+        // this.embeddingService = embeddingService;
     }
 
-    // Title-cases a name so it looks consistent regardless of how the student typed it.
+    // Title-cases a name so it looks consistent regardless of how the student typed
+    // it.
     private String capitalizeName(String name) {
-        if (name == null || name.isBlank()) return name;
+        if (name == null || name.isBlank())
+            return name;
         String[] words = name.split("\\s+");
         StringBuilder sb = new StringBuilder();
         for (String word : words) {
@@ -64,7 +74,8 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         return studentProfileDAO.findById(userId)
                 .orElseGet(() -> {
                     // LAZY CREATION: If no profile exists yet, we create a blank one on the fly.
-                    // This prevents the application from crashing if a user visits their profile for the first time.
+                    // This prevents the application from crashing if a user visits their profile
+                    // for the first time.
                     User user = userDAO.findById(userId)
                             .orElseThrow(() -> new RuntimeException("User not found: " + userId));
                     StudentProfile profile = new StudentProfile();
@@ -73,7 +84,8 @@ public class StudentProfileServiceImpl implements StudentProfileService {
                 });
     }
 
-    // Merges the submitted profile fields into the existing record, formatting names along the way.
+    // Merges the submitted profile fields into the existing record, formatting
+    // names along the way.
     @Override
     public StudentProfile createOrUpdateProfile(StudentProfile profile) {
 
@@ -94,30 +106,36 @@ public class StudentProfileServiceImpl implements StudentProfileService {
         return studentProfileDAO.save(existing);
     }
 
-    // Stores the uploaded file on disk and records the filename in the student's profile.
+    // Stores the uploaded file on disk and records the filename in the student's
+    // profile.
     @Override
     public void uploadResume(Long userId, MultipartFile file) {
+        log.info("Inside uploadResume method in StudentProfileServiceImpl");
         try {
             String fileName = com.job.portal.util.FileStorageUtil.saveResume(userId, file);
 
             StudentProfile profile = getProfile(userId);
             profile.setResumeFileName(fileName);
             profile.setResumeContentType(file.getContentType());
+            log.info("Inside uploadResume method after setting the FileName and ContentType");
 
-            // NEW: extract plain text from the resume so it can be embedded later
-            String extractedText = resumeTextExtractor.extractText(file);
-            profile.setResumeText(extractedText);
+            // // NEW: extract plain text from the resume so it can be embedded later
+            // String extractedText = resumeTextExtractor.extractText(file);
+            // profile.setResumeText(extractedText);
 
-            // NEW: generate the embedding once at upload time, so search doesn't need to recompute it.
-            float[] embedding = embeddingService.generateEmbedding(extractedText);
-            profile.setResumeEmbedding(com.job.portal.util.EmbeddingUtil.toJson(embedding));
+            // // NEW: generate the embedding once at upload time, so search doesn't need to
+            // recompute it.
+            // float[] embedding = embeddingService.generateEmbedding(extractedText);
+            // profile.setResumeEmbedding(com.job.portal.util.EmbeddingUtil.toJson(embedding));
 
             studentProfileDAO.save(profile);
 
         } catch (IOException e) {
+            log.error("Failed to upload Resume: {}", e.getMessage());
             throw new RuntimeException("Could not store the file: " + e.getMessage());
         } catch (Exception e) {
-        throw new RuntimeException("Resume upload failed: " + e.getMessage(), e);
-    }
+            log.error("Failed to upload Resume: {}", e.getMessage());
+            throw new RuntimeException("Resume upload failed: " + e.getMessage(), e);
+        }
     }
 }

@@ -63,15 +63,20 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // RESUME REQUIRED: Block the application if the student has not uploaded a resume.
         // This check runs server-side so it cannot be bypassed from the UI.
-        try {
+        try
+        {
             com.job.portal.model.StudentProfile profile = profileService.getProfile(studentUserId);
-            if (profile == null || profile.getResumeFileName() == null || profile.getResumeFileName().isBlank()) {
+            if (profile == null || profile.getResumeFileName() == null || profile.getResumeFileName().isBlank())
+            {
                 throw new IllegalArgumentException(
                         "You must upload a resume before applying. Please update your profile first.");
             }
-        } catch (IllegalArgumentException e) {
+        }
+        catch (IllegalArgumentException e) {
             throw e; // Re-throw the resume-required error as-is
-        } catch (Exception e) {
+            //use log and print e.message with other details
+        }
+        catch (Exception e) {
             // Profile doesn't exist at all — treat as no resume
             throw new IllegalArgumentException(
                     "You must upload a resume before applying. Please update your profile first.");

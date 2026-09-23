@@ -4,11 +4,11 @@ import com.job.portal.model.User;
 import com.job.portal.model.enums.Role;
 import com.job.portal.service.interfaces.ApplicationService;
 import com.job.portal.service.interfaces.EmployerProfileService;
-import com.job.portal.service.interfaces.JobRerankingService;
+//import com.job.portal.service.interfaces.JobRerankingService;
 import com.job.portal.service.interfaces.JobService;
 import com.job.portal.service.interfaces.StudentProfileService;
 import com.job.portal.service.interfaces.UserService;
-import com.job.portal.service.impl.QdrantSearchService;
+//import com.job.portal.service.impl.QdrantSearchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,14 +43,14 @@ class StudentControllerTest {
     @MockitoBean
     private StudentProfileService profileService;
 
-    @MockitoBean
-    private QdrantSearchService qdrantSearchService;
+    // @MockitoBean
+    // private QdrantSearchService qdrantSearchService;
 
     @MockitoBean
     private EmployerProfileService employerProfileService;
 
-    @MockitoBean
-    private JobRerankingService jobRerankingService;
+    // @MockitoBean
+    // private JobRerankingService jobRerankingService;
 
     private User loggedInStudent;
 
@@ -63,17 +63,18 @@ class StudentControllerTest {
         loggedInStudent.setActive(true);
     }
 
-    @Test
-    @DisplayName("Verify /student/jobs/matches routes correctly without path variable conflict")
-    void testRecommendedJobsRoute() throws Exception {
-        MockHttpSession session = new MockHttpSession();
-        session.setAttribute("user", loggedInStudent);
+    // @Test
+    // @DisplayName("Verify /student/jobs/matches routes correctly without path
+    // variable conflict")
+    // void testRecommendedJobsRoute() throws Exception {
+    // MockHttpSession session = new MockHttpSession();
+    // session.setAttribute("user", loggedInStudent);
 
-        mockMvc.perform(get("/student/jobs/matches").session(session))
-                .andExpect(status().isOk())
-                .andExpect(view().name("student/recommended_jobs"))
-                .andExpect(model().attributeExists("hasResume"));
-    }
+    // mockMvc.perform(get("/student/jobs/matches").session(session))
+    // .andExpect(status().isOk())
+    // .andExpect(view().name("student/recommended_jobs"))
+    // .andExpect(model().attributeExists("hasResume"));
+    // }
 
     @Test
     @DisplayName("Verify /student/jobs/{id} routes correctly for a Long ID")

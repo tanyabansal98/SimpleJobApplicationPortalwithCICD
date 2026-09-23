@@ -10,9 +10,14 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Controller
 @RequestMapping("/employer")
 public class EmployerController {
+
+    private static final Logger log = LoggerFactory.getLogger(EmployerController.class);
 
     private final JobService jobService;
     private final ApplicationService applicationService;
@@ -32,11 +37,13 @@ public class EmployerController {
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         try {
+
             User user = (User) session.getAttribute("user");
             model.addAttribute("jobs", jobService.listJobsByEmployer(user.getUserId()));
             return "employer/dashboard";
         } catch (Exception e) {
             model.addAttribute("error", "Error loading dashboard: " + e.getMessage());
+            log.error("Failed to load the dashboard", e.getMessage());
             return "employer/dashboard";
         }
     }

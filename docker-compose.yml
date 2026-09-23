@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_DB=jobportal
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=l
+      - POSTGRES_PASSWORD=PostgresPassword123
     mem_limit: 200m
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -60,9 +60,10 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - AUTH_SERVICE_URL=http://auth-service:9090
       - RESUME_UPLOAD_DIR=/app/uploads/resumes
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      #- OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - resume_data:/app/uploads/resumes
+      - ./logs:/app/logs
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -71,17 +72,17 @@ services:
       auth-service:
         condition: service_started
 
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: jobportal-qdrant
-    restart: unless-stopped
-    ports:
-      - "6333:6333"   # REST API
-      - "6334:6334"   # gRPC API
-    volumes:
-      - qdrant_data:/qdrant/storage
+  #qdrant:
+    #image: qdrant/qdrant:latest
+    #container_name: jobportal-qdrant
+    #restart: unless-stopped
+    #ports:
+      #- "6333:6333"   # REST API
+      #- "6334:6334"   # gRPC API
+    #volumes:
+      #- qdrant_data:/qdrant/storage
 
 volumes:
   postgres_data:
   resume_data:
-  qdrant_data:
+  #qdrant_data:

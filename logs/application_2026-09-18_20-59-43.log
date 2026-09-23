@@ -1,0 +1,10 @@
+2026-09-18 20:59:44 [] INFO  c.j.p.JobApplicationPortalApplication - Starting JobApplicationPortalApplication v0.0.1-SNAPSHOT using Java 17.0.18 with PID 1 (/app/app.war started by root in /app)
+2026-09-18 20:59:44 [] DEBUG c.j.p.JobApplicationPortalApplication - Running with Spring Boot v3.4.1, Spring v6.2.1
+2026-09-18 20:59:44 [] INFO  c.j.p.JobApplicationPortalApplication - The following 1 profile is active: "docker"
+2026-09-18 20:59:47 [] DEBUG c.j.p.config.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-09-18 20:59:47 [] DEBUG com.job.portal.config.TraceIdFilter - Filter 'traceIdFilter' configured for use
+2026-09-18 20:59:49 [] INFO  c.j.p.JobApplicationPortalApplication - Started JobApplicationPortalApplication in 5.763 seconds (process running for 6.207)
+2026-09-18 21:02:14 [] INFO  c.j.p.config.JwtAuthenticationFilter - JWT authenticated user: student@portal.com with role: STUDENT
+2026-09-18 21:02:14 [a30b5230-be95-450d-89c7-48a0ab7dab78] INFO  c.j.p.controller.StudentController - Inside browseJobs method in StudentController
+2026-09-18 21:04:32 [] INFO  c.j.p.config.JwtAuthenticationFilter - JWT authenticated user: student@portal.com with role: STUDENT
+2026-09-18 21:04:32 [cffee992-d32f-41a2-8a80-affc801291b8] INFO  c.j.p.controller.StudentController - Inside browseJobs method in StudentController

@@ -29,5 +29,5 @@ public interface JobService {
     Job getJob(Long jobId);
 
     // TEMPORARY: runs once to backfill embeddings for all existing jobs.
-    int backfillJobEmbeddings();
+    //int backfillJobEmbeddings();
 }

@@ -16,13 +16,19 @@ public class EmployerProfileDAOImpl implements EmployerProfileDAO {
         this.sessionFactory = sessionFactory;
     }
 
-    private Session getSession() {
+    private Session getSession()
+    {
+        //log.info("this is the factory value :{}", sessionFactory.getCurrentSession());
+        //var a = sessionFactory.getCurrentSession();
+        //var b = a.type();
+        //log.info("{}, {}" a,b);
         return sessionFactory.getCurrentSession();
     }
 
     // Look up a company's profile using the Employer's unique User ID
     @Override
     public Optional<EmployerProfile> findById(Long userId) {
+
         return Optional.ofNullable(getSession().find(EmployerProfile.class, userId));
     }
 

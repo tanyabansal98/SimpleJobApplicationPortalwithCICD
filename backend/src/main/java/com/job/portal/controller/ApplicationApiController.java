@@ -8,12 +8,16 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationApiController {
 
+    private static final Logger log = LoggerFactory.getLogger(ApplicationApiController.class);
     private final ApplicationService applicationService;
 
     public ApplicationApiController(ApplicationService applicationService) {
@@ -75,8 +79,10 @@ public class ApplicationApiController {
         }
     }
 
-    // A secure endpoint for Employers to view the resume a student submitted with a specific application.
-    // Serves the SNAPSHOTTED resume (frozen at apply-time), not the student's current resume.
+    // A secure endpoint for Employers to view the resume a student submitted with a
+    // specific application.
+    // Serves the SNAPSHOTTED resume (frozen at apply-time), not the student's
+    // current resume.
     @GetMapping("/resume/{applicationId}")
     public ResponseEntity<org.springframework.core.io.Resource> downloadResume(@PathVariable Long applicationId,
             HttpSession session) {

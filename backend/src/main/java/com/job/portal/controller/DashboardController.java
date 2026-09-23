@@ -3,13 +3,21 @@ package com.job.portal.controller;
 import com.job.portal.model.User;
 import com.job.portal.model.enums.Role;
 import jakarta.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Acts as a traffic controller right after login.
 
 @Controller
 public class DashboardController {
+
+    private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session) {

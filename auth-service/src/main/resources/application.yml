@@ -25,3 +25,12 @@ jwt:
   secret: "mySuperSecretKeyThatIsAtLeast32BytesLongForSecurity"
   # Token lifetime (1 hour = 3,600,000 milliseconds)
   expiration-ms: 3600000
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{traceId}] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.job.portal.auth: DEBUG
+  file:
+    name: logs/application.log

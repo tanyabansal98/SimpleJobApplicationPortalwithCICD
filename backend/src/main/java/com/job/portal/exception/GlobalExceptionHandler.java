@@ -18,7 +18,8 @@ public class GlobalExceptionHandler {
 
     // Handles cases where a requested item is missing (404 Not Found).
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<?> handleNotFound(ResourceNotFoundException e) {
+    public ResponseEntity<?> handleNotFound(ResourceNotFoundException e)
+    {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", e.getMessage()));
     }
