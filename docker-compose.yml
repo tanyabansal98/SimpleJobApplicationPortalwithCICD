@@ -72,6 +72,21 @@ services:
       auth-service:
         condition: service_started
 
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+
+
+
+
   #qdrant:
     #image: qdrant/qdrant:latest
     #container_name: jobportal-qdrant
@@ -85,4 +100,5 @@ services:
 volumes:
   postgres_data:
   resume_data:
+  chroma_data:
   #qdrant_data:

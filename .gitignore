@@ -27,6 +27,11 @@ target/
 uploads/
 
 # ===============================
+# User Logs
+# ===============================
+logs/
+
+# ===============================
 # Spring Boot local-only secrets
 # (never commit real passwords)
 # ===============================
