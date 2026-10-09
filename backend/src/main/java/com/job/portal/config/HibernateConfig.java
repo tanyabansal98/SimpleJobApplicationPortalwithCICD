@@ -35,7 +35,8 @@ public class HibernateConfig {
     @Value("${spring.jpa.hibernate.ddl-auto}")
     private String hbm2ddl;
 
-    // This bean sets up the actual connection to the Oracle database using our application properties
+    // This bean sets up the actual connection to the Oracle database using our
+    // application properties
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
@@ -46,7 +47,7 @@ public class HibernateConfig {
         return dataSource;
     }
 
-    // The SessionFactory manages our database sessions 
+    // The SessionFactory manages our database sessions
     // and maps our Java classes (models) to database tables.
     @Bean
     public LocalSessionFactoryBean sessionFactory() {
@@ -57,7 +58,7 @@ public class HibernateConfig {
         return sessionFactory;
     }
 
-    // This handles our @Transactional tags, making sure database changes are 
+    // This handles our @Transactional tags, making sure database changes are
     // saved correctly or rolled back if something goes wrong.
     @Bean
     public PlatformTransactionManager transactionManager(SessionFactory sessionFactory) {
@@ -70,9 +71,10 @@ public class HibernateConfig {
         Properties properties = new Properties();
         properties.put("hibernate.dialect", dialect);
         properties.put("hibernate.hbm2ddl.auto", hbm2ddl);
-        properties.put("hibernate.show_sql", "true");
+        properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.format_sql", "true");
-        properties.put("hibernate.current_session_context_class", "org.springframework.orm.hibernate5.SpringSessionContext");
+        properties.put("hibernate.current_session_context_class",
+                "org.springframework.orm.hibernate5.SpringSessionContext");
         return properties;
     }
 }

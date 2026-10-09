@@ -1,5 +1,16 @@
 package com.job.portal.controller;
 
+import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
+import java.util.Map;
+import java.util.HashMap;
 import com.job.portal.model.User;
 import com.job.portal.model.enums.Role;
 import com.job.portal.service.interfaces.UserService;
@@ -13,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 @Controller
 public class AuthController {
@@ -20,6 +32,8 @@ public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final UserService userService;
     private final String authServiceUrl;
+
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public AuthController(UserService userService,
             @Value("${app.auth-service.url:http://localhost:9090}") String authServiceUrl) {
@@ -62,28 +76,27 @@ public class AuthController {
 
     //
     private User tryMicroserviceLogin(String email, String password) {
-        log.info("[AUTH] Attempting login via auth-service microservice for user: {}", email);
+        log.info("[AUTH] Inside backend/AuthController in tryMicroserviceLogin Method. Trying to login for user: {}",
+                email);
 
         try {
             RestTemplate restTemplate = new RestTemplate();
 
             // Set socket and connection timeouts for quick fallback when the microservice
             // is down
-            org.springframework.http.client.SimpleClientHttpRequestFactory requestFactory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
             requestFactory.setConnectTimeout(1500); // 1.5 seconds connection timeout
             requestFactory.setReadTimeout(1500); // 1.5 seconds read timeout
             restTemplate.setRequestFactory(requestFactory);
 
             String url = authServiceUrl + "/auth/login";
-            log.info("[AUTH] Calling auth-service at: {}", url);
-
-            java.util.Map<String, String> requestBody = new java.util.HashMap<>();
+            Map<String, String> requestBody = new HashMap<>();
             requestBody.put("email", email);
             requestBody.put("password", password);
 
             // Call the microservice
             @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> response = restTemplate.postForObject(url, requestBody, java.util.Map.class);
+            Map<String, Object> response = restTemplate.postForObject(url, requestBody, Map.class);
             if (response != null && response.containsKey("token")) {
                 log.info("[AUTH] Microservice login SUCCEEDED for user: {} | Role: {} | JWT issued",
                         response.get("email"), response.get("role"));
@@ -107,7 +120,8 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@RequestParam String email,
             @RequestParam String password,
-            HttpSession session,
+            HttpServletRequest request,
+            HttpServletResponse response,
             Model model) {
         try {
             User user = tryMicroserviceLogin(email, password);
@@ -119,8 +133,17 @@ public class AuthController {
                 log.info("[AUTH] Fallback login SUCCEEDED for user: {} | Role: {}", user.getEmail(), user.getRole());
             }
 
-            session.setAttribute("user", user); // This keeps the user logged in as they navigate
-            log.warn("Unable to login using auth-service");
+            // existing behavior, for SessionInterceptor
+            request.getSession().setAttribute("user", user); // This keeps the user logged in as they navigate
+
+            // new: tell Spring Security the user is authenticated
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(user, null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
+            securityContextRepository.saveContext(context, request, response);
+
             return "redirect:/dashboard";
         } catch (Exception e) {
             log.error("[AUTH] Login FAILED for user: {} | Reason: {}", email, e.getMessage());

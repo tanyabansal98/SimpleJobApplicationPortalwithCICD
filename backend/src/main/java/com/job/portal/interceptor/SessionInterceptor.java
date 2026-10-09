@@ -18,45 +18,40 @@ public class SessionInterceptor implements HandlerInterceptor {
             throws Exception {
 
         String path = request.getServletPath();
-        if (path == null)
-            path = "";
 
-        // 1. Allow public routes
-        if (path.isEmpty() || path.equals("/") || path.equals("/login") || path.equals("/register")
-                || path.equals("/forgot-password")
-                || path.startsWith("/css/") || path.startsWith("/js/") || path.endsWith(".jsp")
-                || request.getQueryString() != null && request.getQueryString().contains("error")) {
+        // 1. Public routes
+        if (path == null || path.isEmpty() || path.equals("/") || path.equals("/login")
+                || path.equals("/register") || path.equals("/forgot-password")) {
             return true;
         }
 
-        // 2. Check if JWT already authenticated this request
+        // 2. JWT-authenticated request
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-            return true; // JWT is valid, let the request through
+            return true;
         }
 
-        // 3. Check session (existing browser login)
+        // 3. Session login
         HttpSession session = request.getSession(false);
-        User user = (session != null) ? (User) session.getAttribute("user") : null;
-
+        User user = null;
+        if (session != null) {
+            user = (User) session.getAttribute("user");
+        }
         if (user == null) {
-            if (path.isEmpty() || path.equals("/")) {
-                return true;
-            }
             response.sendRedirect(request.getContextPath() + "/?error=Please login first.");
             return false;
         }
 
-        // 4. Role-based access
-        if (path.startsWith("/admin/") && user.getRole() != Role.ADMIN) {
-            response.sendRedirect("/dashboard?error=Unauthorized access.");
-            return false;
-        }
-        if (path.startsWith("/student/") && user.getRole() != Role.STUDENT) {
-            response.sendRedirect("/dashboard?error=Unauthorized access.");
-            return false;
-        }
-        if (path.startsWith("/employer/") && user.getRole() != Role.EMPLOYER) {
+        // 4. Role check
+        Role required = null;
+        if (path.startsWith("/admin/"))
+            required = Role.ADMIN;
+        else if (path.startsWith("/student/"))
+            required = Role.STUDENT;
+        else if (path.startsWith("/employer/"))
+            required = Role.EMPLOYER;
+
+        if (required != null && user.getRole() != required) {
             response.sendRedirect("/dashboard?error=Unauthorized access.");
             return false;
         }
