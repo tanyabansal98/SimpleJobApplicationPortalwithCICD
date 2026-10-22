@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
-
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
     private final AdminService adminService;
 
@@ -22,13 +21,16 @@ public class AdminController {
         this.adminService = adminService;
     }
 
-    // Fetches high-level system stats for the Admin Dashboard
+    // Fetches number of total users, total jobs, total applications and active Jobs
+    // for the Admin
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
-        log.info("Inside dashboard method in AdminController");
+        log.info("In AdminController inside dashboard method");
         try {
             model.addAttribute("stats", adminService.getDashboardStats());
-            log.info("Loading admin stats");
+            // log.info("Model contents: {}", model);
+            // log.info("Model contents: {}", model.asMap());
+            log.info("Admin stats loaded successfully");
             return "admin/dashboard";
         } catch (Exception e) {
             model.addAttribute("error", "Error loading admin stats: " + e.getMessage());
@@ -40,10 +42,12 @@ public class AdminController {
     // Displays a complete list of all registered users in the system
     @GetMapping("/users")
     public String listUsers(Model model) {
-        log.info("Inside listUsers method in AdminController");
+        log.info("In AdminController inside listUsers method");
         try {
-            model.addAttribute("users", adminService.listAllUsers());
-            log.info("Displaying the list of application users: {}", adminService.listAllUsers());
+            model.addAttribute("users", adminService.listAllUsers()); // adminServiceImpl -> UserServiceImpl ->
+                                                                      // userDaoImpl
+            // log.info("Model contents: {}", model);
+            log.info("List of users using the application fetched");
             return "admin/users";
         } catch (Exception e) {
             model.addAttribute("error", "Error loading users: " + e.getMessage());
@@ -52,24 +56,24 @@ public class AdminController {
         }
     }
 
-    // Allows the Admin to disable a user's account, preventing them from logging in
+    // Method for the Admin User to Deactivate user accounts
     @PostMapping("/users/deactivate")
     public String deactivateUser(@RequestParam Long userId, Model model) {
-        log.info("Inside deactivateUser method in AdminController");
+        log.info("In AdminController inside deactivateUser method");
         try {
             adminService.deactivateUser(userId);
             log.info("Successfully deactivated the userId: {}", userId);
             return "redirect:/admin/users?success=User deactivated.";
         } catch (Exception e) {
-            log.error("Unable to deactivate userid: {}", userId, e.getMessage());
+            log.error("Unable to deactivate userId: {}", userId, e.getMessage());
             return "redirect:/admin/users?error=Could not deactivate user: " + e.getMessage();
         }
     }
 
-    // Re-enables a previously deactivated user account
+    // Method for the Admin User to Activate user accounts
     @PostMapping("/users/activate")
     public String activateUser(@RequestParam Long userId, Model model) {
-        log.info("Inside activateUser method in AdminController");
+        log.info("In AdminController inside activateUser method");
         try {
             adminService.activateUser(userId);
             log.info("Successfully activated the userId: {}", userId);

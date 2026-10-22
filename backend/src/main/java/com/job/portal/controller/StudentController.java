@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
+import com.job.portal.model.Application;
+import com.job.portal.model.enums.ApplicationStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,93 +38,96 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Handles all the actions a student can do once they're signed in.
-
 @Controller
 @RequestMapping("/student")
-public class StudentController {
+public class StudentController
+{
 
     private static final Logger log = LoggerFactory.getLogger(StudentController.class);
 
     private final JobService jobService;
     private final ApplicationService applicationService;
     private final StudentProfileService profileService;
-    // private final QdrantSearchService qdrantSearchService;
     private final EmployerProfileService employerProfileService;
+    // private final QdrantSearchService qdrantSearchService;
     // private final JobRerankingService jobRerankingService;
 
-    public StudentController(JobService jobService,
+    public StudentController
+            (JobService jobService,
             ApplicationService applicationService,
             StudentProfileService profileService,
-            // QdrantSearchService qdrantSearchService,
-            EmployerProfileService employerProfileService// ,
-    // JobRerankingService jobRerankingService
-    ) {
+            EmployerProfileService employerProfileService
+            // JobRerankingService jobRerankingService,
+                             // QdrantSearchService qdrantSearchService
+    )
+
+    {
         this.jobService = jobService;
         this.applicationService = applicationService;
         this.profileService = profileService;
-        // this.qdrantSearchService = qdrantSearchService;
         this.employerProfileService = employerProfileService;
+        // this.qdrantSearchService = qdrantSearchService;
         // this.jobRerankingService = jobRerankingService;
     }
 
-    // The student's personal overview page - Shows all of their active job
-    // applications
-
     @GetMapping("/dashboard")
-    public String dashboard(HttpSession session, Model model) {
-        try {
-            log.info("Inside student dashboard method in StudentController");
+    public String dashboard(HttpSession session, Model model)
+    {
+        try
+        {
+            log.info("In StudentController inside dashboard method");
             User user = (User) session.getAttribute("user");
-            // Only show applications the student is still actively pursuing.
-            List<com.job.portal.model.Application> activeApps = applicationService.getByStudent(user.getUserId())
+            List<Application> activeApps = applicationService.getByStudent(user.getUserId())
                     .stream()
-                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .filter(app -> app.getStatus() != ApplicationStatus.WITHDRAWN)
                     .collect(Collectors.toList());
             model.addAttribute("applications", activeApps);
             return "student/dashboard";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             model.addAttribute("error", "Error loading dashboard: " + e.getMessage());
             log.error("Failed to load the dashboard", e.getMessage());
             return "student/dashboard";
         }
     }
 
-    /**
-     * The main job board — where students can view and apply for jobs.
-     * Supports optional filtering by job title and location
-     */
-
     @GetMapping("/jobs")
     public String browseJobs(@RequestParam(required = false) String title,
             @RequestParam(required = false) String location,
             HttpSession session,
-            Model model) {
+            Model model)
+    {
 
-        log.info("Inside browseJobs method in StudentController");
-        try {
+        log.info("In StudentController inside browseJobs method");
+        try
+        {
             User user = (User) session.getAttribute("user");
             model.addAttribute("jobs", jobService.listJobs(title, location));
 
             // Track jobs student has already applied to (exclude withdrawn).
             Set<Long> appliedJobIds = applicationService.getByStudent(user.getUserId()).stream()
-                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .filter(app -> app.getStatus() != ApplicationStatus.WITHDRAWN)
                     .map(app -> app.getJob().getJobId())
                     .collect(Collectors.toSet());
             model.addAttribute("appliedJobIds", appliedJobIds);
 
             // Check if student has a resume — Apply buttons are disabled without one.
             boolean hasResume = false;
-            try {
+            try
+            {
                 StudentProfile profile = profileService.getProfile(user.getUserId());
                 hasResume = profile != null && profile.getResumeFileName() != null
                         && !profile.getResumeFileName().isBlank();
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored) {
             }
             model.addAttribute("hasResume", hasResume);
 
             return "student/jobs";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             model.addAttribute("error", "Error browsing jobs: " + e.getMessage());
             return "student/dashboard";
         }
@@ -156,31 +161,37 @@ public class StudentController {
     // Opens the detail page for a single job listing.
 
     @GetMapping("/jobs/{id}")
-    public String viewJob(@PathVariable Long id, HttpSession session, Model model) {
+    public String viewJob(@PathVariable Long id, HttpSession session, Model model)
+    {
         log.info("Inside viewJob method in StudentController");
-        try {
+        try
+        {
             User user = (User) session.getAttribute("user");
             model.addAttribute("job", jobService.getJob(id));
 
             // Check if the student already has a live (non-withdrawn) application for this
             // job.
             boolean alreadyApplied = applicationService.getByStudent(user.getUserId()).stream()
-                    .filter(app -> app.getStatus() != com.job.portal.model.enums.ApplicationStatus.WITHDRAWN)
+                    .filter(app -> app.getStatus() != ApplicationStatus.WITHDRAWN)
                     .anyMatch(app -> app.getJob().getJobId().equals(id));
             model.addAttribute("alreadyApplied", alreadyApplied);
 
             // Check if student has a resume — Apply button is disabled without one.
             boolean hasResume = false;
-            try {
+            try
+            {
                 StudentProfile profile = profileService.getProfile(user.getUserId());
                 hasResume = profile != null && profile.getResumeFileName() != null
                         && !profile.getResumeFileName().isBlank();
-            } catch (Exception ignored) {
+            }
+            catch (Exception ignored) {
             }
             model.addAttribute("hasResume", hasResume);
 
             return "student/job_details";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             model.addAttribute("error", "Error viewing job details: " + e.getMessage());
             log.error("Failed to load the job details for job id: {} with exception: {}", jobService.getJob(id),
                     e.getMessage());
@@ -191,13 +202,17 @@ public class StudentController {
     // Loads the student's profile page
 
     @GetMapping("/profile")
-    public String viewProfile(HttpSession session, Model model) {
-        try {
+    public String viewProfile(HttpSession session, Model model)
+    {
+        try
+        {
             User user = (User) session.getAttribute("user");
             model.addAttribute("profile", profileService.getProfile(user.getUserId()));
             log.info("Inside viewProfile method in StudentController with User id: {}", user.getUserId());
             return "student/profile";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             model.addAttribute("error", "Error loading profile: " + e.getMessage());
             log.error("Failed to load the profile with exception: {}", e.getMessage());
             return "student/dashboard";
@@ -210,21 +225,24 @@ public class StudentController {
     @ResponseBody
     public ResponseEntity<Map<String, Object>> uploadResume(
             @RequestParam("file") MultipartFile file,
-            HttpSession session) {
+            HttpSession session)
+    {
 
         User user = (User) session.getAttribute("user");
         Map<String, Object> response = new HashMap<>();
 
         log.info("Inside uploadResume method in StudentController");
-        try {
+        try
+        {
             profileService.uploadResume(user.getUserId(), file);
             StudentProfile profile = profileService.getProfile(user.getUserId());
             response.put("success", true);
-            // Send back the stored filename so the UI can reflect the change right away.
+            // Send back the stored filename
             response.put("fileName", profile.getResumeFileName());
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // Something went wrong — let the frontend know so it can show an error.
+        }
+        catch (Exception e)
+        {
             response.put("success", false);
             response.put("message", e.getMessage());
 

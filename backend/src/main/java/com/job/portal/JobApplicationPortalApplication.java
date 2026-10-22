@@ -14,7 +14,7 @@ public class JobApplicationPortalApplication {
 
 	public static void main(String[] args) {
 		try {
-			System.out.println("In main fucnction, starting the application...");
+			System.out.println("In main function, starting the application...");
 			SpringApplication.run(JobApplicationPortalApplication.class, args);
 		} catch (Exception e) {
 			System.err.println("Application failed to start due to an error: " + e.getMessage());

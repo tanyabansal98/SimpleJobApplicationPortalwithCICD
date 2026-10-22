@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory;
 
 @Controller
 public class DashboardController {
-
     private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session) {
+        log.info("In DashboardController inside dashboard method");
         try {
             User user = (User) session.getAttribute("user");
 

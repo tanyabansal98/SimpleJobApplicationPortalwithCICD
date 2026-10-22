@@ -27,26 +27,32 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 @Controller
-public class AuthController {
+public class AuthController
+{
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private final UserService userService;
-    private final String authServiceUrl;
+    private final String authServiceUrl; //Field variable which stores the address of microservice auth-service. Address is passed as a value in constructor.
 
-    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository(); //S
 
     public AuthController(UserService userService,
-            @Value("${app.auth-service.url:http://localhost:9090}") String authServiceUrl) {
+            @Value("${app.auth-service.url:http://localhost:9090}") String authServiceUrl) //@Value tells Spring to inject value from a config file - application-docker.properties or else the default value passed here
+    {
         this.userService = userService;
         this.authServiceUrl = authServiceUrl;
     }
 
     // Simply shows the initial login screen
     @GetMapping({ "/", "/login" })
-    public String showLoginPage(Model model) {
-        try {
+    public String showLoginPage(Model model)
+    {
+        try
+        {
             return "index";
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             model.addAttribute("error", "Error loading login page: " + e.getMessage());
             return "index";
         }
