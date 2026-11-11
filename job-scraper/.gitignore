@@ -1,0 +1,5 @@
+.env
+.venv/
+
+*.csv
+job_details_*

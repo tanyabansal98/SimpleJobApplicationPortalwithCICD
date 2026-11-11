@@ -1,7 +1,7 @@
 import glob
 import json
 import os
-
+from dotenv import load_dotenv
 import psycopg2
 
 EMPLOYER_USER_ID = int(os.environ["EMPLOYER_USER_ID"])
