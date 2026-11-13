@@ -5,8 +5,11 @@ import chromadb
 import psycopg2
 from dotenv import load_dotenv
 from openai import OpenAI
+from logger_setup import get_logger
 
+log = get_logger("embed_jobs")
 load_dotenv()
+
 
 COLLECTION = os.getenv("CHROMA_COLLECTION", "job-embeddings")
 EMBED_MODEL = "text-embedding-3-small"
@@ -31,6 +34,8 @@ def fetch_jobs(cur):
     if ONLY_SCRAPED:
         sql += " AND external_id IS NOT NULL"
     cur.execute(sql) # A cursor (cur) is the object that runs SQL
+    rows = cur.fetchall()
+    log.info("Fetched %d active jobs from Postgres (only_scraped=%s)", len(rows), ONLY_SCRAPED)
     cols = ["job_id", "title", "company", "location", "description", "job_type", "source_url"]
     return [dict(zip(cols, row)) for row in cur.fetchall()]
 
@@ -74,10 +79,14 @@ def embed(client, texts):
 
 
 if __name__ == "__main__":
+    log.info("Run started: collection=%s, model=%s, chunk=%d words, overlap=%d",
+             COLLECTION, EMBED_MODEL, CHUNK_WORDS, OVERLAP_WORDS)
+
     openai_client = OpenAI()   # reads OPENAI_API_KEY from the environment
     chroma = chromadb.HttpClient(host=os.getenv("CHROMA_HOST", "localhost"),
                                  port=int(os.getenv("CHROMA_PORT", "8000")))
     collection = chroma.get_or_create_collection(name=COLLECTION)
+    log.info("Connected to ChromaDB, collection '%s' has %d chunks", COLLECTION, collection.count())
 
     conn = connect_pg()
     try:
@@ -88,7 +97,8 @@ if __name__ == "__main__":
 
     known = stored_hashes(collection)
     todo = [j for j in jobs if known.get(j["job_id"]) != content_hash(j)]
-    print(f"{len(jobs)} jobs in Postgres, {len(todo)} new or changed")
+    #print(f"{len(jobs)} jobs in Postgres, {len(todo)} new or changed")
+    log.info("%d jobs in Postgres, %d new or changed", len(jobs), len(todo))
 
     done = failed = 0
     for job in todo:
@@ -113,9 +123,13 @@ if __name__ == "__main__":
                 } for i in range(len(chunks))],
             )
             done += 1
-            print(f"OK job {job['job_id']}: {job['title']} ({len(chunks)} chunks)")
+            #print(f"OK job {job['job_id']}: {job['title']} ({len(chunks)} chunks)")
+            log.info("OK job %s: %s (%d chunks)", job["job_id"], job["title"], len(chunks))
         except Exception as e:
             failed += 1
-            print(f"FAILED job {job['job_id']}: {e}")
+            #print(f"FAILED job {job['job_id']}: {e}")
+            log.exception("FAILED job %s", job["job_id"])
 
-    print(f"Embedded {done} jobs, {failed} failed. Collection now has {collection.count()} chunks.")
+    #print(f"Embedded {done} jobs, {failed} failed. Collection now has {collection.count()} chunks.")
+    log.info("Embedded %d jobs, %d failed. Collection now has %d chunks.",
+             done, failed, collection.count())
