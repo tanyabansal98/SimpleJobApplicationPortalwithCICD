@@ -5,7 +5,7 @@ import com.job.portal.model.User;
 import com.job.portal.dao.StudentProfileDAO;
 import com.job.portal.dao.UserDAO;
 import com.job.portal.service.interfaces.StudentProfileService;
-//import com.job.portal.util.ResumeTextExtractor;
+import com.job.portal.util.ResumeTextExtractor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,20 +31,20 @@ public class StudentProfileServiceImpl implements StudentProfileService {
 
     private final StudentProfileDAO studentProfileDAO;
     private final UserDAO userDAO;
-    // private final ResumeTextExtractor resumeTextExtractor;
+    private final ResumeTextExtractor resumeTextExtractor;
     // private final EmbeddingService embeddingService;
 
     @Value("${app.upload.dir:/Users/tanyabansal/Desktop/WebDevFinalProject/uploads/resumes}")
     private String uploadDir;
 
     public StudentProfileServiceImpl(StudentProfileDAO studentProfileDAO,
-            UserDAO userDAO// ,
-    // ResumeTextExtractor resumeTextExtractor,
+            UserDAO userDAO,
+            ResumeTextExtractor resumeTextExtractor
     // EmbeddingService embeddingService
     ) {
         this.studentProfileDAO = studentProfileDAO;
         this.userDAO = userDAO;
-        // this.resumeTextExtractor = resumeTextExtractor;
+        this.resumeTextExtractor = resumeTextExtractor;
         // this.embeddingService = embeddingService;
     }
 
@@ -119,9 +119,9 @@ public class StudentProfileServiceImpl implements StudentProfileService {
             profile.setResumeContentType(file.getContentType());
             log.info("Inside uploadResume method after setting the FileName and ContentType");
 
-            // // NEW: extract plain text from the resume so it can be embedded later
-            // String extractedText = resumeTextExtractor.extractText(file);
-            // profile.setResumeText(extractedText);
+            // NEW: extract plain text from the resume so it can be embedded later
+            String extractedText = resumeTextExtractor.extractText(file);
+            profile.setResumeText(extractedText);
 
             // // NEW: generate the embedding once at upload time, so search doesn't need to
             // recompute it.
